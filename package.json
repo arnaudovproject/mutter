@@ -1,0 +1,12 @@
+{
+  "name": "mutter",
+  "version": "1.0.3",
+  "type": "module",
+  "description": "Mutter AI workspace — OpenCode plugin entry (skills live under mutter-claude/skills).",
+  "main": ".opencode/plugins/mutter.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/arnaudovproject/mutter.git"
+  },
+  "license": "MIT"
+}

@@ -1,0 +1,18 @@
+{
+  "name": "mutter-plugins",
+  "owner": {
+    "name": "Ventsislav Arnaudov",
+    "email": "mail@varnaudov.com"
+  },
+  "metadata": {
+    "description": "Mutter AI workspace — Claude Code plugin (skills + templates)",
+    "homepage": "https://github.com/arnaudovproject/mutter"
+  },
+  "plugins": [
+    {
+      "name": "mutter",
+      "source": "./mutter-claude",
+      "description": "Mutter AI workspace: .mutter/ orchestration, incremental scan, tasks, plans, token-efficient context."
+    }
+  ]
+}

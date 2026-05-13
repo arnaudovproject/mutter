@@ -1,0 +1,28 @@
+---
+description: Mutter AI workspace — minimal entry and routing to .mutter (same behavior as CLAUDE.md).
+alwaysApply: true
+---
+
+# Mutter (Cursor)
+
+Read `.mutter/core/project.md` before substantive work.
+
+## Rules
+
+- Use `.mutter/index/` for navigation; never load the whole repository into context.
+- Obey `.mutter/rules/` and `.mutter/architecture/` for boundaries and ADRs.
+- Use `.mutter/workflows/` for repeatable procedures.
+- Prefer incremental reads: only files tied to the active task, plan, or scan delta.
+- Before **web search** for official language/framework/database documentation, check **`.mutter/memory/official-tech-docs-roadmap.md`** for a direct link (read one section only).
+- Keep **this rule file small**; bulk knowledge lives under `.mutter/`.
+
+## Plugin alignment
+
+When the **Mutter** Cursor plugin is installed, use its skills/commands for Mutter workflows. In **Claude Code**, the same workflows are **`/mutter:<skill>`** (e.g. `/mutter:scan`). In Cursor, use commands like **mutter-scan**, **mutter-workers**, or ask the agent to follow the matching skill. Full skill index: Claude **`/mutter:help`**, Cursor **mutter-help** command or **help** skill.
+
+## Safety
+
+- No dumping unrelated modules, generated artifacts, or entire frameworks into chat.
+- After material changes, update `.mutter/tasks/`, `.mutter/architecture/decisions.md`, and scan metadata as appropriate.
+
+_Upstream **mutter** does not commit `.cursor/`; harness docs live in **`docs/mutter-plugin-harness-reference.md`**._

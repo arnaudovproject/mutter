@@ -1,0 +1,9 @@
+{
+  "_comment": "Example shard shape — replace with real symbols from your codebase.",
+  "ProductService": {
+    "path": "src/Service/ProductService.php",
+    "related": ["ProductRepository", "ProductValidator", "ProductController"],
+    "domain": "catalog",
+    "tests": ["tests/Product/ProductServiceTest.php"]
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "name": "mutter",
+  "displayName": "Mutter",
+  "description": "Mutter AI workspace: orchestration, incremental indexing, tasks, plans, and token-efficient context for large projects (Cursor).",
+  "version": "1.0.3",
+  "author": {
+    "name": "Ventsislav Arnaudov",
+    "email": "mail@varnaudov.com"
+  },
+  "homepage": "https://github.com/arnaudovproject/mutter",
+  "repository": "https://github.com/arnaudovproject/mutter",
+  "license": "MIT",
+  "keywords": [
+    "mutter",
+    "workspace",
+    "architecture",
+    "tasks",
+    "token-efficiency",
+    "scan",
+    "brainstore",
+    "workers"
+  ],
+  "rules": "./rules/",
+  "skills": "./skills/",
+  "commands": "./commands/"
+}

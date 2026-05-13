@@ -1,0 +1,38 @@
+# --- Local environments & secrets ---
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+
+# --- JS / OpenCode plugin install cache (when developing locally) ---
+node_modules/
+
+# --- Build / dist ---
+dist/
+build/
+*.egg-info/
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+
+# --- Editors ---
+.idea/
+*.swp
+*.swo
+
+# --- Cursor IDE (local only; not tracked — see docs/mutter-plugin-harness-reference.md) ---
+.cursor/
+
+# --- Generated / volatile under .mutter (keep tracked README / templates) ---
+.mutter/cache/*
+!.mutter/cache/README.md
+.mutter/scans/*.txt
+.mutter/scans/*.md
+!.mutter/scans/README.md
+.mutter/logs/*.log

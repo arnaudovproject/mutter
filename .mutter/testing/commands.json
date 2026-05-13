@@ -1,0 +1,13 @@
+{
+  "by_extension": {
+    ".py": ["python3 -m py_compile scripts/mutter.py"]
+  },
+  "by_prefix": {
+    "mutter-claude/skills": ["python3 scripts/mutter.py check-skill-refs"],
+    "mutter-cursor/skills": ["python3 scripts/mutter.py check-skill-refs"],
+    "scripts": ["python3 -m py_compile scripts/mutter.py"]
+  },
+  "path_globs": {
+    ".github/workflows/*.yml": ["python3 scripts/mutter.py validate-tasks"]
+  }
+}

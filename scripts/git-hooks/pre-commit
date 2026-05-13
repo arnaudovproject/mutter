@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# Mutter: optional git pre-commit — validates .mutter tasks/plans before commit.
+# Enable once per clone:  git config core.hooksPath scripts/git-hooks
+# Disable:                git config --unset core.hooksPath
+#
+# Behavior:
+# - Skips if not inside a git work tree, or no .mutter/, or no scripts/mutter.py.
+# - Skips (exit 0) if python3 is missing (prints a short notice to stderr).
+# - Runs: validate-tasks, validate-plans (warnings do not fail the hook by default).
+# - Set MUTTER_HOOK_STRICT=1 to treat validation warnings as errors.
+# - By default also runs: scan-secrets (staged files only), guard-large-change.
+# - Set MUTTER_HOOK_SKIP_GOVERNANCE=1 to skip scan-secrets + guard-large-change.
+
+set -eu
+
+ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
+cd "$ROOT" || exit 0
+
+if [[ ! -d .mutter ]]; then
+  exit 0
+fi
+if [[ ! -f scripts/mutter.py ]]; then
+  exit 0
+fi
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "mutter pre-commit: python3 not found; skipping Mutter validation." >&2
+  exit 0
+fi
+
+if [[ -n "${MUTTER_HOOK_STRICT:-}" ]]; then
+  python3 scripts/mutter.py validate-tasks --warnings-as-errors
+  python3 scripts/mutter.py validate-plans --warnings-as-errors
+  GOV_EXTRA=(--warnings-as-errors)
+else
+  python3 scripts/mutter.py validate-tasks
+  python3 scripts/mutter.py validate-plans
+  GOV_EXTRA=()
+fi
+
+if [[ -z "${MUTTER_HOOK_SKIP_GOVERNANCE:-}" ]]; then
+  echo "mutter pre-commit: governance (scan-secrets --git-staged, guard-large-change)" >&2
+  python3 scripts/mutter.py scan-secrets --git-staged --max-files 500 --max-bytes 256000 "${GOV_EXTRA[@]}"
+  python3 scripts/mutter.py guard-large-change "${GOV_EXTRA[@]}"
+fi

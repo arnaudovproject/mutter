@@ -1,0 +1,9 @@
+{
+  "modules": {
+    "example_billing": {
+      "roots": ["src/billing", "packages/billing"],
+      "may_import": ["shared", "users"],
+      "forbidden": ["admin"]
+    }
+  }
+}

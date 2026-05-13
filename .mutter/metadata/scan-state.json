@@ -1,0 +1,8 @@
+{
+  "last_scan": null,
+  "files_scanned": 0,
+  "changed_files": [],
+  "hash_strategy": "sha256",
+  "file_hashes": {},
+  "notes": "Update on each /mutter scan. Only reprocess paths listed in changed_files or diffed against file_hashes."
+}

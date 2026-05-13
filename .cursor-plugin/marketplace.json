@@ -1,0 +1,18 @@
+{
+  "name": "mutter-cursor-marketplace",
+  "owner": {
+    "name": "Ventsislav Arnaudov",
+    "email": "mail@varnaudov.com"
+  },
+  "metadata": {
+    "description": "Mutter AI workspace — Cursor plugin (rules, skills, commands)",
+    "homepage": "https://github.com/arnaudovproject/mutter"
+  },
+  "plugins": [
+    {
+      "name": "mutter",
+      "source": "mutter-cursor",
+      "description": "Mutter AI workspace: .mutter/ orchestration, incremental scan, tasks, plans, token-efficient context."
+    }
+  ]
+}

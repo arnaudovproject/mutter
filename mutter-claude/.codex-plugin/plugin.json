@@ -1,0 +1,40 @@
+{
+  "name": "mutter",
+  "version": "1.0.3",
+  "description": "Mutter AI workspace: orchestration, incremental indexing, tasks, plans, and token-efficient context for large projects (Codex).",
+  "author": {
+    "name": "Ventsislav Arnaudov",
+    "email": "mail@varnaudov.com",
+    "url": "https://github.com/arnaudovproject"
+  },
+  "homepage": "https://github.com/arnaudovproject/mutter",
+  "repository": "https://github.com/arnaudovproject/mutter",
+  "license": "MIT",
+  "keywords": [
+    "mutter",
+    "workspace",
+    "architecture",
+    "tasks",
+    "token-efficiency",
+    "scan",
+    "brainstore",
+    "workers"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Mutter",
+    "shortDescription": "AI workspace orchestration under .mutter/",
+    "longDescription": "Use Mutter for incremental scans, index-first navigation, tasks and plans, safe editing, reviews, and multi-worker workflows with low token use.",
+    "developerName": "Ventsislav Arnaudov",
+    "category": "Coding",
+    "capabilities": ["Interactive", "Read", "Write"],
+    "defaultPrompt": [
+      "Run a Mutter incremental scan and summarize what changed.",
+      "Create or update a Mutter task for the current goal."
+    ],
+    "websiteURL": "https://github.com/arnaudovproject/mutter",
+    "privacyPolicyURL": "https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement",
+    "termsOfServiceURL": "https://docs.github.com/en/site-policy/github-terms/github-terms-of-service",
+    "brandColor": "#6366F1"
+  }
+}
