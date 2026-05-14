@@ -24,7 +24,7 @@ export const MutterPlugin = async () => {
     }
 
     const toolMapping = `**Harness: OpenCode**
-- List and load skills with OpenCode's native **skill** tool (e.g. load the \`scan\` or \`task\` skill from this plugin).
+- List and load skills with OpenCode's native **skill** tool (e.g. load the \`scan\`, \`task\`, or \`status\` skill from this plugin).
 - Prefer **incremental** reads via \`.mutter/index/\` and active task/plan paths — never load the whole repository into context.
 - For official docs before web search, open **one** section of \`.mutter/memory/official-tech-docs-roadmap.md\` when that file exists in the project.`;
 

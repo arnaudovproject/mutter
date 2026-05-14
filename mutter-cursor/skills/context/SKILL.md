@@ -7,6 +7,10 @@ description: Build or refresh small curated context bundles under .mutter/contex
 
 `$ARGUMENTS` names the bundle id or topic (e.g. `billing-refactor`).
 
+## Idempotent re-runs
+
+If **`.mutter/context/<bundle>.md`** already exists and **`$ARGUMENTS`** maps to the same bundle, **read it first**. Refresh only stale bullets (e.g. paths removed from the repo, renamed modules); **retain** still-valid links. If nothing is stale, report “context bundle current” and skip.
+
 ## Steps
 
 1. Identify relevant index keys from `.mutter/index/*.json` using keywords from `$ARGUMENTS`.

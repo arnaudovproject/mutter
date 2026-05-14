@@ -7,6 +7,10 @@ description: Maintain long-lived project memory under .mutter/memory — convent
 
 `$ARGUMENTS` is the memory operation (e.g. “add naming convention for DTOs”, “document catalog domain terms”).
 
+## Idempotent re-runs
+
+**Search filenames and headings** under **`memory/`** before adding. If the convention or term **already exists** in the right shard, **extend or correct that section** instead of creating a parallel file. If the payload is identical to what is on disk, **no-op** with a pointer to the existing path.
+
 ## Official documentation roadmap
 
 - The template ships **`memory/official-tech-docs-roadmap.md`**: languages, databases, frameworks, DevOps, ML — **official documentation links**.

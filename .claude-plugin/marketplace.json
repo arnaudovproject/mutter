@@ -12,7 +12,7 @@
     {
       "name": "mutter",
       "source": "./mutter-claude",
-      "description": "Mutter AI workspace: .mutter/ orchestration, incremental scan, tasks, plans, token-efficient context."
+      "description": "Mutter AI workspace — .mutter/ orchestration, incremental scan, tasks, plans, task status, token-efficient context."
     }
   ]
 }

@@ -7,6 +7,10 @@ description: Produce or update a risk assessment for a change — store under .m
 
 `$ARGUMENTS` describes the change or links to a plan file.
 
+## Idempotent re-runs
+
+If a **`*-risks.md`** sidecar already exists for the active plan, **open and patch** it (close mitigations that shipped, add new ones) instead of creating another parallel file with the same scope.
+
 ## Output
 
 - Short risk table: id, severity, likelihood, mitigation, owner (TBD ok).

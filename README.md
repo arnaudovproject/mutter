@@ -21,7 +21,7 @@ Verify with **`/mutter:help`**.
 
 **Mutter** is a plugin and methodology for an **AI workspace** on top of your code: structured on-disk memory (`.mutter/`), token-efficient workflows, tasks, plans, incremental indexing, and consistent operating rules across several agent harnesses.
 
-The plugin name in manifests is **`mutter`** (lowercase). In **Claude Code**, skills are invoked under the **`/mutter:<name>`** namespace — for example `/mutter:scan`, `/mutter:help` (docs sometimes shorten this to “`/mutter scan`”; in Claude Code the colon form is canonical).
+The plugin name in manifests is **`mutter`** (lowercase). In **Claude Code**, skills are invoked under the **`/mutter:<name>`** namespace — for example `/mutter:scan`, `/mutter:status`, `/mutter:help` (docs sometimes shorten this to “`/mutter scan`”; in Claude Code the colon form is canonical).
 
 ---
 
@@ -123,12 +123,12 @@ Restart OpenCode. Details: [`.opencode/INSTALL.md`](.opencode/INSTALL.md). Plugi
 
 ## How to work with Mutter (short flow)
 
-1. **Bootstrap** — if the project has no `.mutter/`, run the **`bootstrap`** skill (or follow it) to materialize the template from `mutter-claude/templates/dot-mutter/`.
+1. **Bootstrap** — if the project has no `.mutter/`, run the **`bootstrap`** skill (or follow it) to materialize the template from `mutter-claude/templates/dot-mutter/`. If `.mutter/` already exists and you upgraded the Mutter plugin, run **`python3 scripts/mutter.py bootstrap-sync --dry-run`** then **`bootstrap-sync`** to refresh templates and `mutter.py` without touching your tasks, plans, or architecture docs.
 2. **Entry files** — keep root **`CLAUDE.md`** (or Cursor rules) **small**; they should only route to `.mutter/core/project.md` and global safety rules.
 3. **Scan** — **`/mutter:scan`** in Claude (or the equivalent in your harness) for incremental updates and indexes.
-4. **Tasks and plans** — **`task`**, **`plan`**; for large epics — **`workers`**.
+4. **Tasks and plans** — **`task`**, **`plan`**, **`status`** (checklist progress); for large epics — **`workers`**.
 5. **Changes** — **`safe-edit`**; before merge — **`review-diff`**.
-6. **Terminal checks** (when `scripts/mutter.py` exists): `python3 scripts/mutter.py preflight` before a large change; `validate-task` / `validate-plans` in CI.
+6. **Terminal checks** (when `scripts/mutter.py` exists): `python3 scripts/mutter.py preflight` before a large change; `tasks-status` / `sync-task-progress` during execution; `validate-task` / `validate-plans` in CI.
 
 More on workspace tools: [`docs/mutter-workspace-tools-audit.md`](docs/mutter-workspace-tools-audit.md).
 
@@ -144,12 +144,13 @@ In **Claude Code** the format is **`/mutter:<skill>`**. In **Cursor**, the same 
 | **help** | Orientation | Reference for commands and rules. |
 | **scan** | After code changes / periodically | Incremental scan, index updates, `scan-state`. |
 | **brainstore** | Ideas, notes, structured intel | Writes under `.mutter/brainstore/`. |
-| **task** | A concrete unit of work | Create, update, split, execute tasks. |
+| **task** | A concrete unit of work | Create, update, split, execute tasks; bare `task` or `execute` runs the **current** queue; `create` with no text pulls from **roadmap**. |
+| **status** | Visibility | Markdown table of step/acceptance checklist progress (`tasks-status`). |
 | **plan** | Before a larger change | Plan with risks and affected files. |
 | **workers** | Epics, parallel agents | Queue, briefs, safe parallelism. |
 | **safe-edit** | Any editing | Explain → minimal diff → verify. |
 | **review-diff** | Before PR / merge | Architecture, security, tests, conventions. |
-| **roadmap** | Planning | Maintain roadmap under `.mutter/roadmap/`. |
+| **roadmap** | Planning | Maintain roadmap under `.mutter/roadmap/`; empty args first align with **architecture** shards. |
 | **architecture** | Design and boundaries | Architecture docs and ADRs. |
 | **context** | Tight agent context | Curated bundles under `.mutter/context/`. |
 | **memory** | Long-lived rules | Conventions; includes `official-tech-docs-roadmap.md` (official doc links before web search). |
@@ -175,6 +176,7 @@ These Markdown files define discoverable commands (names like **`mutter-<skill>`
 | **mutter-preflight** | Pre-work checks (state, dirty git, diff size, etc.). |
 | **mutter-context-pack** | Compact Markdown bundle for agents. |
 | **mutter-governance** | ADRs, boundaries, quality — per the matching `.md` in `commands/`. |
+| **mutter-status** | Task checklist table (`tasks-status` CLI). |
 
 Other `.md` files in `mutter-cursor/commands/` mirror skill names (e.g. `scan`, `plan`, `task`).
 

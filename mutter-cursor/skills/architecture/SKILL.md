@@ -7,6 +7,10 @@ description: Curate and update architecture documentation under .mutter/architec
 
 `$ARGUMENTS` describes the doc update (e.g. “document auth flow”, “refresh backend boundaries”).
 
+## Idempotent re-runs
+
+Before editing: **open only the target shard(s)** plus one related index entry. If the request **repeats** with the same intent and the files **already reflect** it, **report “no change”** and stop. Otherwise **append** or **surgical patch**—never rewrite a large markdown file from scratch unless the user asked for a full regen. Remove obsolete bullets when code or ADRs supersede them.
+
 ## Scope
 
 - Files: `overview.md`, `backend.md`, `frontend.md`, `database.md`, `infrastructure.md`, `event-flow.md`, `auth.md`, `deployment.md`, `decisions.md`.

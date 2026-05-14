@@ -7,6 +7,10 @@ description: Deeper multi-file analysis for a hypothesis or bug — explicit fil
 
 `$ARGUMENTS` states the hypothesis or question.
 
+## Idempotent re-runs
+
+If you already wrote **`.mutter/context/<slug>.md`** or a plan note for the **same hypothesis**, **open that file first**; extend or correct it instead of repeating the full read pass when sources and question are unchanged.
+
 ## Steps
 
 1. Propose an explicit **file list** (≤12 files) before bulk reading; justify each path in one line.

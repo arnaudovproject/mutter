@@ -19,6 +19,7 @@ Use the Mutter plugin skills. In Claude Code, namespaced skills look like **`/mu
 - `/mutter:scan` — incremental project scan
 - `/mutter:brainstore` — structured idea → intelligence files
 - `/mutter:task` — task create/update/split/execute (see skill body)
+- `/mutter:status` — task checklist progress table (pairs with `tasks-status` / `sync-task-progress`)
 - `/mutter:plan` — planning with risks and affected files
 - `/mutter:safe-edit` — explain-then-edit discipline
 - `/mutter:review-diff` — architecture and quality review

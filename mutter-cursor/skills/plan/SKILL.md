@@ -7,6 +7,10 @@ description: Produce a scoped implementation plan with affected files, risks, ar
 
 Planning input is **`$ARGUMENTS`** (free text goal).
 
+## Idempotent re-runs
+
+Before creating a **new** dated file under **`.mutter/plans/`**, **list existing plans** (filenames + first heading). If one plan already matches the same goal (or superseded draft), **update that file in place** (append a “Revision” stanza or bump metadata) instead of spawning another duplicate. If nothing changed since the last write, **say so** and skip. Only add a new dated file when the scope is genuinely new or the user asked for a fork.
+
 ## Preconditions
 
 - Skim `.mutter/core/project.md`, `.mutter/architecture/overview.md`, and **only** index shards likely related (infer from keywords in `$ARGUMENTS`).
@@ -14,7 +18,7 @@ Planning input is **`$ARGUMENTS`** (free text goal).
 
 ## Deliverable
 
-Write a dated plan file under `.mutter/plans/` containing:
+Write or update a plan file under `.mutter/plans/` containing:
 
 1. Goal restatement (one paragraph max)
 2. **Affected files** (paths) grouped by domain
@@ -31,7 +35,7 @@ After writing the plan, optionally run **`python3 scripts/mutter.py validate-pla
 ## Chat output
 
 - Summarize plan in **≤15 bullets**; link to the plan file path.
-- Set `.mutter/state/current.json` `active_plan` to the new plan filename.
+- Set `.mutter/state/current.json` `active_plan` to the plan filename you are using.
 
 ## Token rules
 

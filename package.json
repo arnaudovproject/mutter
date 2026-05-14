@@ -2,7 +2,7 @@
   "name": "mutter",
   "version": "1.0.3",
   "type": "module",
-  "description": "Mutter AI workspace — OpenCode plugin entry (skills live under mutter-claude/skills).",
+  "description": "Mutter AI workspace — OpenCode plugin entry (skills under mutter-claude/skills); includes task checklist status via tasks-status.",
   "main": ".opencode/plugins/mutter.js",
   "repository": {
     "type": "git",

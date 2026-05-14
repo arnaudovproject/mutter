@@ -7,6 +7,10 @@ description: Create point-in-time snapshots of index, architecture, or roadmap u
 
 `$ARGUMENTS` lists targets, e.g. `index architecture` or `all`.
 
+## Idempotent re-runs
+
+If a snapshot for the **same slug + same day** already exists and **no source files changed** since its `manifest.json` mtime, **skip** creating a duplicate folder unless the user asked for a **forced** snapshot. Otherwise create a **new dated folder** only when there is new material to freeze.
+
 ## Steps
 
 1. Create folder `.mutter/snapshots/<iso-date>-<slug>/`.

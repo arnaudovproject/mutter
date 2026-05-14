@@ -29,6 +29,9 @@ Usage (from repository root that contains `.mutter/`):
   python3 scripts/mutter.py scan-secrets
   python3 scripts/mutter.py scan-todos
   python3 scripts/mutter.py guard-large-change
+  python3 scripts/mutter.py tasks-status
+  python3 scripts/mutter.py sync-task-progress
+  python3 scripts/mutter.py bootstrap-sync
 """
 from __future__ import annotations
 
@@ -37,6 +40,8 @@ import fnmatch
 import json
 import os
 import re
+import shutil
+from datetime import datetime, timezone
 import subprocess
 import sys
 from dataclasses import dataclass, field
@@ -345,6 +350,97 @@ def load_state(repo_root: Path) -> dict:
     return json.loads(p.read_text(encoding="utf-8"))
 
 
+def save_state(repo_root: Path, updates: dict[str, Any]) -> None:
+    """Merge updates into .mutter/state/current.json (shallow merge at top level)."""
+    p = repo_root / ".mutter" / "state" / "current.json"
+    data = load_state(repo_root) if p.is_file() else {}
+    data.update(updates)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+
+
+_TASK_BUCKETS_DEFAULT = ("current", "planned", "blocked", "completed")
+
+
+def extract_meta_status(md_text: str) -> str | None:
+    """Best-effort **Status** from the Meta section (skips template placeholder rows with |)."""
+    for line in md_text.splitlines()[:45]:
+        if "**Status:**" not in line and "**status:**" not in line.lower():
+            continue
+        m = re.search(r"\*\*Status:\*\*\s*(.+)$", line, re.I)
+        if not m:
+            continue
+        rest = m.group(1).strip()
+        if "|" in rest and "`" in rest:
+            continue
+        tick = re.match(r"`([^`]+)`\s*$", rest)
+        if tick:
+            return tick.group(1).strip()
+        if rest and "|" not in rest:
+            return rest.strip().strip("`").split()[0]
+    return None
+
+
+def steps_checklist_progress(body: str) -> tuple[int, int]:
+    """Count top-level markdown checklist items: lines starting with '- [' (Steps / Acceptance)."""
+    done = 0
+    total = 0
+    for line in body.splitlines():
+        m = re.match(r"^-\s*\[([ xX])\]\s+", line)
+        if not m:
+            continue
+        total += 1
+        if m.group(1).lower() == "x":
+            done += 1
+    return done, total
+
+
+def analyze_task_progress(md_text: str) -> dict[str, Any]:
+    sections = parse_sections(md_text)
+    steps_body = section_matching(sections, "Steps") or ""
+    acc_body = section_matching(sections, "Acceptance") or ""
+    sd, st = steps_checklist_progress(steps_body)
+    ad, at = steps_checklist_progress(acc_body)
+    return {
+        "meta_status": extract_meta_status(md_text),
+        "steps_done": sd,
+        "steps_total": st,
+        "acceptance_done": ad,
+        "acceptance_total": at,
+    }
+
+
+def task_title_line(md_text: str) -> str:
+    for line in md_text.splitlines()[:8]:
+        if line.startswith("# "):
+            return line[2:].strip()
+    return "(untitled)"
+
+
+def progress_ticks(done: int, total: int, *, width_cap: int = 14) -> str:
+    if total <= 0:
+        return "—"
+    tick = "✓"
+    open_ = "○"
+    s = "".join(tick if i < done else open_ for i in range(min(total, width_cap)))
+    if total > width_cap:
+        s += f"+{total - width_cap}"
+    return s
+
+
+def iter_task_markdown_files(repo_root: Path, buckets: list[str]) -> list[tuple[str, Path]]:
+    out: list[tuple[str, Path]] = []
+    for bucket in buckets:
+        base = repo_root / ".mutter" / "tasks" / bucket
+        if not base.is_dir():
+            continue
+        for md in sorted(base.glob("*.md")):
+            if md.name == "README.md":
+                continue
+            out.append((bucket, md.resolve()))
+    return out
+
+
 def resolve_plan_arg(repo_root: Path, plan_arg: str | None) -> Path | None:
     if plan_arg:
         raw = Path(plan_arg)
@@ -370,13 +466,32 @@ def resolve_plan_arg(repo_root: Path, plan_arg: str | None) -> Path | None:
 
 def resolve_task_arg(repo_root: Path, task_arg: str | None) -> Path | None:
     if task_arg:
-        raw = Path(task_arg)
+        s = str(task_arg).strip()
+        raw = Path(s)
         if raw.is_file():
             return raw.resolve()
-        cand = (repo_root / task_arg).resolve()
+        cand = (repo_root / s).resolve()
         if cand.is_file():
             return cand
-        return (repo_root / ".mutter" / task_arg).resolve() if (repo_root / ".mutter" / task_arg).is_file() else None
+        cand_m = (repo_root / ".mutter" / s).resolve()
+        if cand_m.is_file():
+            return cand_m
+        cand_ts = (repo_root / ".mutter" / "tasks" / s).resolve()
+        if cand_ts.is_file():
+            return cand_ts
+        name = Path(s).name
+        if not name.endswith(".md"):
+            name = f"{name}.md"
+        for bucket in _TASK_BUCKETS_DEFAULT:
+            p = repo_root / ".mutter" / "tasks" / bucket / name
+            if p.is_file():
+                return p.resolve()
+        if not s.endswith(".md"):
+            for bucket in _TASK_BUCKETS_DEFAULT:
+                p = repo_root / ".mutter" / "tasks" / bucket / f"{s}.md"
+                if p.is_file():
+                    return p.resolve()
+        return None
 
     state = load_state(repo_root)
     at = state.get("active_task")
@@ -469,6 +584,226 @@ def cmd_status(_args: argparse.Namespace, repo_root: Path) -> int:
                 print(f"\nWARN: active_plan {ap!r} does not resolve to an existing file", file=sys.stderr)
     else:
         print("(no current.json)")
+    return 0
+
+
+def cmd_tasks_status(args: argparse.Namespace, repo_root: Path) -> int:
+    """Markdown table: per-task step and acceptance checklist progress (from disk)."""
+    buckets = list(args.include)
+    rows: list[tuple[str, Path, dict[str, Any], str]] = []
+    if args.task:
+        tp = resolve_task_arg(repo_root, args.task)
+        if not tp or not tp.is_file():
+            print(f"ERROR: task not found for {args.task!r}", file=sys.stderr)
+            return 1
+        try:
+            bucket = tp.parent.name
+        except Exception:
+            bucket = "?"
+        text = tp.read_text(encoding="utf-8")
+        rows.append((bucket, tp, analyze_task_progress(text), text))
+    else:
+        for bucket, tp in iter_task_markdown_files(repo_root, buckets):
+            text = tp.read_text(encoding="utf-8")
+            rows.append((bucket, tp, analyze_task_progress(text), text))
+
+    if not rows:
+        print("_No task markdown files found in selected buckets._")
+        return 0
+
+    rel = lambda p: str(p.relative_to(repo_root))
+
+    print("## Mutter task status\n")
+    print("| Bucket | File | Title | Meta | Steps | Acceptance | Progress |")
+    print("|--------|------|-------|------|-------|--------------|----------|")
+    sum_steps_done = sum_steps_total = 0
+    step_complete_files = 0
+    step_nonempty_files = 0
+    for bucket, tp, pr, text in rows:
+        title = task_title_line(text).replace("|", "\\|")
+        meta = (pr.get("meta_status") or "—").replace("|", "\\|")
+        sd, st = pr["steps_done"], pr["steps_total"]
+        ad, at = pr["acceptance_done"], pr["acceptance_total"]
+        sum_steps_done += sd
+        sum_steps_total += st
+        if st:
+            step_nonempty_files += 1
+            if sd >= st:
+                step_complete_files += 1
+        step_cell = f"{sd}/{st}" if st else "0/0"
+        acc_cell = f"{ad}/{at}" if at else "—"
+        ticks = progress_ticks(sd, st)
+        print(
+            f"| {bucket} | `{rel(tp)}` | {title} | {meta} | {step_cell} | {acc_cell} | {ticks} |"
+        )
+
+    nfiles = len(rows)
+    print()
+    print(
+        f"**Summary:** {nfiles} task file(s); **Steps** checklists ticked **{sum_steps_done}/{sum_steps_total}** across all listed files."
+    )
+    if not args.task:
+        print(
+            f"**Files with every Steps checkbox done:** {step_complete_files}/{step_nonempty_files} (among files that declare at least one step)."
+        )
+
+    if args.task and len(rows) == 1:
+        _, tp, pr, text = rows[0]
+        sections = parse_sections(text)
+        steps_body = section_matching(sections, "Steps") or ""
+        print(f"\n### Steps detail: `{rel(tp)}`\n")
+        for line in steps_body.splitlines():
+            if re.match(r"^-\s*\[[ xX]\]\s+", line):
+                print(line.strip())
+
+    return 0
+
+
+def cmd_sync_task_progress(args: argparse.Namespace, repo_root: Path) -> int:
+    """Refresh `.mutter/state/current.json` → `execution_progress` from task checklists."""
+    tp = resolve_task_arg(repo_root, args.task)
+    if not tp or not tp.is_file():
+        print(
+            "ERROR: no task file. Pass --task PATH|slug or set active_task in .mutter/state/current.json",
+            file=sys.stderr,
+        )
+        return 1
+    text = tp.read_text(encoding="utf-8")
+    pr = analyze_task_progress(text)
+    rel_task = str(tp.relative_to(repo_root))
+    progress: dict[str, Any] = {
+        "task": rel_task,
+        "steps_done": pr["steps_done"],
+        "steps_total": pr["steps_total"],
+        "acceptance_done": pr["acceptance_done"],
+        "acceptance_total": pr["acceptance_total"],
+        "task_status": pr.get("meta_status"),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    save_state(repo_root, {"execution_progress": progress})
+    print(f"OK — execution_progress updated from {rel_task}")
+    print(json.dumps(progress, indent=2))
+    return 0
+
+
+def _bootstrap_sync_rel_allowed(rel_posix: str) -> bool:
+    """Paths under dot-mutter template that may be copied onto an existing consumer .mutter/."""
+    rel_posix = rel_posix.replace("\\", "/")
+
+    stub_paths = frozenset(
+        {
+            "tasks/current/README.md",
+            "plans/README.md",
+            "brainstore/README.md",
+            "roadmap/README.md",
+            "index/README.md",
+            "index/catalog.example.json",
+            "context/README.md",
+            "scans/README.md",
+            "reviews/README.md",
+            "diffs/README.md",
+            "snapshots/README.md",
+            "cache/README.md",
+            "logs/README.md",
+        }
+    )
+    if rel_posix in stub_paths:
+        return True
+
+    if rel_posix.startswith(
+        (
+            "tasks/",
+            "plans/",
+            "architecture/",
+            "brainstore/",
+            "roadmap/",
+            "index/",
+            "state/",
+            "metadata/",
+            "logs/",
+            "cache/",
+            "scans/",
+            "reviews/",
+            "diffs/",
+            "snapshots/",
+            "context/",
+            "ownership/",
+        )
+    ):
+        return False
+    if rel_posix == "boundaries.json":
+        return False
+
+    allowed_prefixes = ("templates/", "quality-gates/", "workflows/", "adr/")
+    if any(rel_posix.startswith(p) for p in allowed_prefixes):
+        return True
+    if rel_posix.startswith("testing/"):
+        return True
+    if rel_posix in (
+        "core/project.md",
+        "rules/README.md",
+        "memory/official-tech-docs-roadmap.md",
+        "memory/README.md",
+    ):
+        return True
+    return False
+
+
+def cmd_bootstrap_sync(args: argparse.Namespace, repo_root: Path) -> int:
+    """Refresh plugin-shipped files under .mutter/ and optionally scripts/mutter.py (preserves tasks, plans, etc.)."""
+    mutter_dir = repo_root / ".mutter"
+    if not mutter_dir.is_dir():
+        print("ERROR: .mutter/ is missing — run bootstrap first.", file=sys.stderr)
+        return 1
+
+    template_root = args.template_root
+    if template_root is None:
+        cand = repo_root / "mutter-claude" / "templates" / "dot-mutter"
+        template_root = cand if cand.is_dir() else None
+    if template_root is None or not template_root.is_dir():
+        print(
+            "ERROR: template root not found. Pass --template-root /path/to/mutter-claude/templates/dot-mutter",
+            file=sys.stderr,
+        )
+        return 1
+    template_root = template_root.resolve()
+
+    n = 0
+    for src in sorted(template_root.rglob("*")):
+        if not src.is_file():
+            continue
+        rel = src.relative_to(template_root).as_posix()
+        if not _bootstrap_sync_rel_allowed(rel):
+            continue
+        dest = mutter_dir / src.relative_to(template_root)
+        rel_repo = dest.relative_to(repo_root)
+        if args.dry_run:
+            print(f"would copy: {rel} -> {rel_repo}")
+        else:
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, dest)
+        n += 1
+
+    msrc = args.mutter_py_source
+    if msrc is None:
+        mc = repo_root / "mutter-claude" / "templates" / "scripts" / "mutter.py"
+        msrc_p = mc if mc.is_file() else None
+    else:
+        msrc_p = Path(msrc)
+        if not msrc_p.is_file():
+            print(f"WARN: --mutter-py-source {msrc!r} missing — skip scripts/mutter.py", file=sys.stderr)
+            msrc_p = None
+    if msrc_p is not None:
+        dscript = repo_root / "scripts" / "mutter.py"
+        if args.dry_run:
+            print(f"would copy: mutter.py -> {dscript.relative_to(repo_root)}")
+        else:
+            dscript.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(msrc_p, dscript)
+        n += 1
+
+    action = "planned copies" if args.dry_run else "updated files"
+    print(f"OK — bootstrap-sync {action}: {n} (template {template_root})")
     return 0
 
 
@@ -1508,6 +1843,51 @@ def main() -> int:
         help="Show .mutter/state/current.json and short previews of active task/plan when set.",
     )
     p_st.set_defaults(func=cmd_status)
+
+    p_ts = sub.add_parser(
+        "tasks-status",
+        help="Markdown table: checklist progress for tasks (Steps + Acceptance); optional --task filter.",
+    )
+    p_ts.add_argument(
+        "--task",
+        type=str,
+        default=None,
+        help="Slug, filename, or path (e.g. task-01 or .mutter/tasks/current/foo.md).",
+    )
+    p_ts.add_argument(
+        "--include",
+        nargs="+",
+        default=list(_TASK_BUCKETS_DEFAULT),
+        choices=list(_TASK_BUCKETS_DEFAULT),
+        help="Task buckets to scan when --task is omitted.",
+    )
+    p_ts.set_defaults(func=cmd_tasks_status)
+
+    p_sy = sub.add_parser(
+        "sync-task-progress",
+        help="Write execution_progress in state/current.json from the resolved task's checklists.",
+    )
+    p_sy.add_argument("--task", type=str, default=None, help="Override task (default: active_task in state).")
+    p_sy.set_defaults(func=cmd_sync_task_progress)
+
+    p_bs = sub.add_parser(
+        "bootstrap-sync",
+        help="Copy plugin template files into existing .mutter/ (templates, workflows, quality-gates, …) without touching tasks/plans/architecture content.",
+    )
+    p_bs.add_argument(
+        "--template-root",
+        type=Path,
+        default=None,
+        help="Path to mutter-claude/templates/dot-mutter (default: ./mutter-claude/templates/dot-mutter when present).",
+    )
+    p_bs.add_argument(
+        "--mutter-py-source",
+        type=Path,
+        default=None,
+        help="Path to mutter.py to install at scripts/mutter.py (default: mutter-claude/templates/scripts/mutter.py).",
+    )
+    p_bs.add_argument("--dry-run", action="store_true", help="Print actions without writing files.")
+    p_bs.set_defaults(func=cmd_bootstrap_sync)
 
     p_sc = sub.add_parser("scan-state", help="Print changed_files from .mutter/metadata/scan-state.json.")
     p_sc.set_defaults(func=cmd_scan_state)

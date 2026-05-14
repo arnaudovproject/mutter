@@ -16,7 +16,7 @@ This document is a **single source of truth** for what the Mutter project ships 
 | Bootstrap template (dot-mutter) | `mutter-claude/templates/dot-mutter/` | Copied to `<consumer>/.mutter/` on bootstrap |
 | Bootstrap template (CLI) | `mutter-claude/templates/scripts/mutter.py` | Copy of `scripts/mutter.py`; installed to `<consumer>/scripts/mutter.py` when missing |
 | Git hook (optional) | `scripts/git-hooks/pre-commit` | Runs task + plan validation before commit when enabled |
-| Cursor palette commands | `mutter-cursor/commands/*.md` → **mutter-validate**, **mutter-preflight**, **mutter-context-pack**, **mutter-governance**, … | Steers the agent to run `scripts/mutter.py` with the right cwd and subcommands |
+| Cursor palette commands | `mutter-cursor/commands/*.md` → **mutter-validate**, **mutter-preflight**, **mutter-context-pack**, **mutter-governance**, **mutter-status**, … | Steers the agent to run `scripts/mutter.py` with the right cwd and subcommands |
 | CI workflow | `.github/workflows/mutter-check.yml` | Runs `python3 scripts/mutter.py ci --check-cursor-sync` on push/PR |
 
 ---
@@ -60,6 +60,22 @@ python3 scripts/mutter.py --help
 
 - **What:** Prints `repo_root`, path to `current.json`, full JSON, and short previews of resolved **active_task** and **active_plan** when set.
 - **When:** New chat session, debugging state.
+
+### `tasks-status`
+
+- **What:** Emits a **Markdown table** of every task `*.md` (default buckets: `current`, `planned`, `blocked`, `completed`): **Steps** and **Acceptance** checklist counts plus a **✓/○** visual for steps. With **`--task <slug-or-path>`**, one task plus a **Steps detail** list.
+- **When:** **`/mutter:status`**; after multi-step execution to report progress without opening every file.
+
+### `sync-task-progress`
+
+- **What:** Reads the resolved task file’s checklists and writes **`execution_progress`** (and timestamps) into `.mutter/state/current.json`. Uses **`active_task`** when `--task` is omitted.
+- **When:** After **each** `/mutter:task` execute step once the markdown checkboxes are updated — keeps state aligned for dashboards and hand-offs.
+
+### `bootstrap-sync`
+
+- **What:** Copies **plugin-managed** files from **`--template-root`** (default: `./mutter-claude/templates/dot-mutter` when present) into **`.mutter/`** — e.g. `templates/`, `quality-gates/`, `workflows/`, `adr/` files shipped with the template, `testing/commands.json`, `core/project.md`, README stubs. **Does not** overwrite **`tasks/`** (except `tasks/current/README.md`), user **`plans/*.md`**, **`architecture/`**, user **`roadmap/*.md`**, **`brainstore/`** beyond README, **`state/`**, **`metadata/`** (keeps **`scan-state.json`**), **`index/`** data shards, or **`logs/*.log`**. Updates **`scripts/mutter.py`** when **`mutter-claude/templates/scripts/mutter.py`** exists (override with **`--mutter-py-source`**).
+- **Flags:** **`--dry-run`** lists planned copies.
+- **When:** Re-run **`/mutter:bootstrap`** / plugin upgrade to merge new Mutter template + CLI into a repo that already has `.mutter/`.
 
 ### `scan-state`
 

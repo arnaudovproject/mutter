@@ -12,10 +12,11 @@ Namespace is **`/mutter:<skill-folder>`** (plugin `name` is `mutter`).
 
 | Skill | Purpose |
 |-------|---------|
-| `bootstrap` | Create `.mutter/` from template |
+| `bootstrap` | Create `.mutter/` from template **or** refresh plugin files via `bootstrap-sync` |
 | `scan` | Incremental project scan + indexes |
 | `brainstore` | Idea → structured intelligence under `.mutter/brainstore/` |
-| `task` | Create / update / split / execute tasks |
+| `task` | Create / update / split / execute tasks (progress via `sync-task-progress`) |
+| `status` | Task checklist dashboard (`tasks-status` CLI) |
 | `workers` | Epic work: queue, multi-agent briefs, safe parallelism |
 | `plan` | Scoped plan with risks and affected files |
 | `safe-edit` | Explain impact, then edit in small steps |
@@ -25,7 +26,7 @@ Namespace is **`/mutter:<skill-folder>`** (plugin `name` is `mutter`).
 
 | Skill | Purpose |
 |-------|---------|
-| `roadmap` | Roadmap maintenance |
+| `roadmap` | Roadmap maintenance; empty args → inventory roadmap + gap analysis vs architecture |
 | `architecture` | Architecture files + ADRs |
 | `context` | Curated context bundles |
 | `memory` | Long-lived conventions; **`official-tech-docs-roadmap.md`** for official doc links (check before web search) |
@@ -41,8 +42,8 @@ Namespace is **`/mutter:<skill-folder>`** (plugin `name` is `mutter`).
 
 Always keep **root** `CLAUDE.md` and **`.cursor/rules/mutter.mdc`** small; put bulk content under `.mutter/`.
 
-**Cursor:** palette commands include **mutter-validate**, **mutter-preflight**, **mutter-context-pack**, and **mutter-governance** (see `mutter-cursor/commands/` in this repo).
+**Cursor:** palette commands include **mutter-validate**, **mutter-preflight**, **mutter-context-pack**, **mutter-governance**, and **mutter-status** (see `mutter-cursor/commands/` in this repo).
 
 ## Workspace CLI (optional)
 
-If **`scripts/mutter.py`** exists at the repo root (installed by **bootstrap** when missing), run **`python3 scripts/mutter.py --help`**. Common entrypoints: **`validate-task`**, **`validate-plans`**, **`preflight`**, **`context-pack`**, **`risk-check`**, **`suggest-tests`**, **`pr-template`**, **`scan-secrets`**, **`guard-large-change`**. Full reference: **`docs/mutter-workspace-tools-audit.md`**. Optional git hook: enable with `git config core.hooksPath scripts/git-hooks` after clone.
+If **`scripts/mutter.py`** exists at the repo root (installed by **bootstrap** when missing), run **`python3 scripts/mutter.py --help`**. Common entrypoints: **`validate-task`**, **`tasks-status`**, **`sync-task-progress`**, **`bootstrap-sync`**, **`validate-plans`**, **`preflight`**, **`context-pack`**, **`risk-check`**, **`suggest-tests`**, **`pr-template`**, **`scan-secrets`**, **`guard-large-change`**. Full reference: **`docs/mutter-workspace-tools-audit.md`**. Optional git hook: enable with `git config core.hooksPath scripts/git-hooks` after clone.

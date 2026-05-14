@@ -1,6 +1,6 @@
 ---
 name: mutter-roadmap
-description: Mutter workspace command — roadmap (see skill `roadmap`).
+description: Mutter workspace command — roadmap (empty args align with architecture; see skill `roadmap`).
 ---
 
 # mutter roadmap
@@ -12,4 +12,3 @@ Run the **roadmap** workflow from the Mutter plugin.
 3. Keep responses incremental; update `.mutter/metadata/scan-state.json`, tasks, and ADRs when your actions change project truth.
 
 For slash-style usage in Claude Code, use `/mutter:roadmap`. In Cursor, use the Command palette entry or ask the agent to follow the **roadmap** skill.
-

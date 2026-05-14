@@ -25,7 +25,7 @@ This directory (`.mutter/`) is the **persistent structured memory** for AI-assis
 | `logs/` | Scan/task/review logs |
 | `brainstore/` | Output of `/mutter brainstore` |
 | `snapshots/` | Point-in-time copies of index/architecture/roadmap |
-| `state/` | Active task/plan/workflow pointers |
+| `state/` | `current.json` — active task/plan/workflow + `execution_progress` (from `sync-task-progress`) |
 | `context/` | Small curated context bundles (not whole-repo dumps) |
 | `rules/` | Project-specific mutter rules shards |
 | `templates/` | Local templates for tasks/plans |

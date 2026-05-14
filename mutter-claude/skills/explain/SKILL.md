@@ -7,6 +7,10 @@ description: Explain a symbol, file, or behavior with minimal reads using .mutte
 
 `$ARGUMENTS` is what to explain (path, symbol, or concept).
 
+## Idempotent re-runs
+
+If the same **`$ARGUMENTS`** was answered in this session or in **`.mutter/context/`** / **`.mutter/brainstore/`**, **point to the prior write** and only re-read if the user says code changed.
+
 ## Steps
 
 1. Resolve the target via `.mutter/index/` if possible; else ask one clarifying question.

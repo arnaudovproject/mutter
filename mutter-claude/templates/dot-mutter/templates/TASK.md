@@ -58,4 +58,4 @@ Do **one** step per agent turn unless the user explicitly asks otherwise.
 
 ## Execution log (optional)
 
-Append one line per completed step: ISO date, step id, outcome.
+Append one line per completed step: ISO date, step id, outcome. After updating checkboxes, run **`python3 scripts/mutter.py sync-task-progress`** so `state/current.json` stays aligned.

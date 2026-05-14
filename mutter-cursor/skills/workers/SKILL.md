@@ -7,6 +7,10 @@ description: Epic and multi-worker orchestration — split huge goals into isola
 
 Use when a goal is **too large for one context**, may take **many turns or hours**, or the user wants **several agents** without drift or duplicated edits.
 
+## Idempotent re-runs
+
+**Read the queue on disk** (`active_task`, `active_plan`, task checklists) before spawning workers. **Do not re-dispatch** packages already marked done unless the user explicitly reopened them. Coordinator merges **only new** worker outputs into plans/tasks.
+
 ## Principles
 
 1. **Coordinator** (this session, or a dedicated planning pass) owns the queue and merges outcomes. Workers do not silently redefine scope.

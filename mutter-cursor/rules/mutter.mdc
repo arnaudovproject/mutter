@@ -18,7 +18,7 @@ Read `.mutter/core/project.md` before substantive work.
 
 ## Plugin alignment
 
-When the **Mutter** Cursor plugin is installed, use its skills/commands for Mutter workflows. In **Claude Code**, the same workflows are **`/mutter:<skill>`** (e.g. `/mutter:scan`). In Cursor, use commands like **mutter-scan**, **mutter-workers**, or ask the agent to follow the matching skill. Full skill index: Claude **`/mutter:help`**, Cursor **mutter-help** command or **help** skill.
+When the **Mutter** Cursor plugin is installed, use its skills/commands for Mutter workflows. In **Claude Code**, the same workflows are **`/mutter:<skill>`** (e.g. `/mutter:scan`). In Cursor, use commands like **mutter-scan**, **mutter-status**, **mutter-workers**, or ask the agent to follow the matching skill. Full skill index: Claude **`/mutter:help`**, Cursor **mutter-help** command or **help** skill.
 
 ## Safety
 

@@ -22,7 +22,7 @@ Docs: [Create plugins](https://code.claude.com/docs/en/plugins), [Plugins refere
 - Manifest: `mutter-claude/.claude-plugin/plugin.json` — `name: mutter` ⇒ skills are **`/mutter:<skill-folder>`**.
 - **Never** put `skills/`, `agents/`, `hooks/`, `commands/` inside `.claude-plugin/` — only `plugin.json` lives there.
 - **Skills:** `skills/<name>/SKILL.md` with YAML frontmatter **`name`**, **`description`**, optional **`disable-model-invocation: true`** for `bootstrap` and `help`. The `name` field matches the folder and is required for **Codex** compatibility; `scripts/sync_cursor_skills.py` normalizes it when you regenerate Cursor copies.
-- **Templates:** `mutter-claude/templates/CLAUDE.md`, `mutter-claude/templates/dot-mutter/`, and **`mutter-claude/templates/scripts/mutter.py`** (workspace CLI — bootstrap copies the latter to `<repo>/scripts/mutter.py` when missing). The dot-mutter tree mirrors canonical `.mutter/` when we change the scaffold; **bootstrap** skill tells the agent to copy `templates/dot-mutter` → `<repo>/.mutter/`. The template includes `memory/official-tech-docs-roadmap.md` (official doc URLs; check before web search).
+- **Templates:** `mutter-claude/templates/CLAUDE.md`, `mutter-claude/templates/dot-mutter/`, and **`mutter-claude/templates/scripts/mutter.py`** (workspace CLI — bootstrap copies the latter to `<repo>/scripts/mutter.py` when missing). The dot-mutter tree mirrors canonical `.mutter/` when we change the scaffold; **bootstrap** skill tells the agent to copy `templates/dot-mutter` → `<repo>/.mutter/`. For **existing** `.mutter/`, consumers run **`python3 scripts/mutter.py bootstrap-sync`** (see workspace tools audit) to merge updated plugin files without wiping tasks or architecture. The template includes `memory/official-tech-docs-roadmap.md` (official doc URLs; check before web search).
 - **Git hooks (optional):** `scripts/git-hooks/pre-commit` — enable repo-wide with `git config core.hooksPath scripts/git-hooks` (validates tasks + plans when `.mutter/` and `scripts/mutter.py` exist).
 - **Dev:** `claude --plugin-dir ./mutter-claude`; `/reload-plugins` after edits.
 
@@ -62,7 +62,7 @@ Docs: [Plugins](https://opencode.ai/docs/plugins/). Reference implementation: [o
 - **Index shards:** `.mutter/index/*.json` — symbol/path/domain/test pointers, not full source.
 - **Tasks:** `.mutter/tasks/{current,planned,blocked,completed}/` — one markdown task per file when possible.
 - **Plans / reviews / diffs:** `.mutter/plans/`, `.mutter/reviews/`, `.mutter/diffs/` for durable audit trails.
-- **State:** `.mutter/state/current.json` tracks active task/plan/workflow pointers.
+- **State:** `.mutter/state/current.json` tracks active task/plan/workflow pointers and optional **`execution_progress`** (from `sync-task-progress`).
 
 ## Parity rules when changing behavior
 

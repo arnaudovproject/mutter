@@ -1,6 +1,6 @@
 {
   "name": "mutter",
-  "description": "Mutter AI workspace: orchestration, incremental indexing, tasks, plans, and token-efficient context for large projects (Claude Code).",
+  "description": "Mutter AI workspace: orchestration, incremental indexing, tasks, plans, task status dashboards, and token-efficient context for large projects (Claude Code).",
   "version": "1.0.3",
   "author": {
     "name": "Ventsislav Arnaudov",
@@ -17,6 +17,7 @@
     "token-efficiency",
     "scan",
     "brainstore",
-    "workers"
+    "workers",
+    "status"
   ]
 }
