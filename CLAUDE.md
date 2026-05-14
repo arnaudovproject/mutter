@@ -10,6 +10,7 @@ Read `.mutter/core/project.md` first.
 - Prefer **incremental** context: open only files listed for the active task or plan.
 - Before **web search** for official language/framework/database documentation, check **`.mutter/memory/official-tech-docs-roadmap.md`** for a direct link (read one section only).
 - Keep **this file small**; do not move bulk memory here—use `.mutter/`.
+- **Multi-harness parity:** when you change or extend anything that affects how the Mutter plugins behave (skills, templates, manifests, OpenCode bootstrap, versions), do it **in parallel for every harness we ship** — `mutter-claude/`, `mutter-cursor/` (run `python3 scripts/sync_cursor_skills.py` after skill edits), `mutter-claude/.codex-plugin/`, and the repo-root OpenCode entry (`package.json`, `.opencode/`). Do not upgrade one harness and leave the others behind unless the task explicitly documents a harness-only exception.
 
 ## Commands
 

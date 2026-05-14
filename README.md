@@ -1,5 +1,24 @@
 # Mutter
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![GitHub](https://img.shields.io/github/stars/arnaudovproject/mutter?style=social)](https://github.com/arnaudovproject/mutter)
+
+## Quick install (Claude Code)
+
+Register the **repository root** (the folder that contains `.claude-plugin/marketplace.json`), not `mutter-claude/`:
+
+```text
+/plugin marketplace add /path/to/mutter
+/plugin install mutter@mutter-plugins
+/reload-plugins
+```
+
+Verify with **`/mutter:help`**.
+
+**Do not** install Mutter by symlinking into `~/.claude/plugins`. It is a **Claude marketplace** plugin: add the repo with **`/plugin marketplace add`**, then install **`mutter@mutter-plugins`** as above.
+
+---
+
 **Mutter** is a plugin and methodology for an **AI workspace** on top of your code: structured on-disk memory (`.mutter/`), token-efficient workflows, tasks, plans, incremental indexing, and consistent operating rules across several agent harnesses.
 
 The plugin name in manifests is **`mutter`** (lowercase). In **Claude Code**, skills are invoked under the **`/mutter:<name>`** namespace — for example `/mutter:scan`, `/mutter:help` (docs sometimes shorten this to “`/mutter scan`”; in Claude Code the colon form is canonical).
@@ -39,18 +58,16 @@ Codex and Claude share the **same** Markdown skills under `mutter-claude/skills/
 
 ### Claude Code
 
-1. **Locally from a cloned repository** (development or direct use):
+**Global install:** use [Quick install (Claude Code)](#quick-install-claude-code) at the top of this README (`/plugin marketplace add` → `/plugin install mutter@mutter-plugins` → `/reload-plugins`).
 
-```bash
-cd /path/to/mutter
-claude --plugin-dir ./mutter-claude
-```
+1. **Clone** (if you do not have the repo yet): `git clone https://github.com/arnaudovproject/mutter.git`
+2. **Marketplace path** — pass the **clone root**. Example: if the repo is at `/code/claude/mutter/mutter`, run `/plugin marketplace add /code/claude/mutter/mutter`. Claude registers the catalog from [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) (name **`mutter-plugins`**); the plugin package lives under [`mutter-claude/`](mutter-claude/) and installs as **`mutter@mutter-plugins`**.
+3. **Update** — `git pull` in the clone, then **`/reload-plugins`** in Claude Code.
+4. **Uninstall** — `/plugin uninstall mutter`, then `/plugin marketplace remove mutter-plugins`.
 
-After editing the plugin during a Claude Code session: **`/reload-plugins`**.
+**Local / dev** (run from a clone without marketplace): from the repo root, `claude --plugin-dir ./mutter-claude`. After editing plugin files: **`/reload-plugins`**.
 
-2. **Marketplace** — this repository ships [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) with catalog name **`mutter-plugins`** and plugin **`mutter`**. Register the Git repository as a plugin source per the [official Claude Code plugins documentation](https://code.claude.com/docs/en/plugins), then install the **`mutter`** plugin from that catalog.
-
-Official links: [Create plugins](https://code.claude.com/docs/en/plugins) · [Plugins reference](https://code.claude.com/en/plugins-reference).
+Official docs: [Plugins](https://code.claude.com/docs/en/plugins) · [Plugins reference](https://code.claude.com/en/plugins-reference).
 
 ---
 
