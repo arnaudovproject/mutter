@@ -1,6 +1,6 @@
 ---
 name: mutter-task
-description: Mutter workspace command — task (create/update/split/execute, roadmap-backed create, progress sync; see skill `task`).
+description: Mutter workspace command — task (create/update/split/execute; plans + roadmap when no path; progress sync; see skill `task`).
 ---
 
 # mutter task

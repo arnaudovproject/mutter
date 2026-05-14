@@ -16,7 +16,7 @@ This document is a **single source of truth** for what the Mutter project ships 
 | Bootstrap template (dot-mutter) | `mutter-claude/templates/dot-mutter/` | Copied to `<consumer>/.mutter/` on bootstrap |
 | Bootstrap template (CLI) | `mutter-claude/templates/scripts/mutter.py` | Copy of `scripts/mutter.py`; installed to `<consumer>/scripts/mutter.py` when missing |
 | Git hook (optional) | `scripts/git-hooks/pre-commit` | Runs task + plan validation before commit when enabled |
-| Cursor palette commands | `mutter-cursor/commands/*.md` → **mutter-validate**, **mutter-preflight**, **mutter-context-pack**, **mutter-governance**, **mutter-status**, … | Steers the agent to run `scripts/mutter.py` with the right cwd and subcommands |
+| Cursor palette commands | `mutter-cursor/commands/*.md` → **mutter-agent-cadence**, **mutter-validate**, **mutter-preflight**, **mutter-context-pack**, **mutter-governance**, **mutter-status**, … | Steers the agent to run `scripts/mutter.py` with the right cwd and subcommands |
 | CI workflow | `.github/workflows/mutter-check.yml` | Runs `python3 scripts/mutter.py ci --check-cursor-sync` on push/PR |
 
 ---
@@ -71,6 +71,12 @@ python3 scripts/mutter.py --help
 - **What:** Reads the resolved task file’s checklists and writes **`execution_progress`** (and timestamps) into `.mutter/state/current.json`. Uses **`active_task`** when `--task` is omitted.
 - **When:** After **each** `/mutter:task` execute step once the markdown checkboxes are updated — keeps state aligned for dashboards and hand-offs.
 
+### `agent-cadence`
+
+- **What:** Prints Markdown that maps **lifecycle phases** (bootstrap, session resume, plan, task loop, PR) to **skills** and **`scripts/mutter.py`** subcommands — canonical guidance so agents do not improvise when to run the CLI.
+- **When:** Cold start / onboarding a new agent thread; after plugin upgrade when workflows change.
+- **Flags:** **`--out <path>`** writes the same Markdown to a file (e.g. `.mutter/context/agent-cadence.md`) instead of stdout.
+
 ### `bootstrap-sync`
 
 - **What:** Copies **plugin-managed** files from **`--template-root`** (default: `./mutter-claude/templates/dot-mutter` when present) into **`.mutter/`** — e.g. `templates/`, `quality-gates/`, `workflows/`, `adr/` files shipped with the template, `testing/commands.json`, `core/project.md`, README stubs. **Does not** overwrite **`tasks/`** (except `tasks/current/README.md`), user **`plans/*.md`**, **`architecture/`**, user **`roadmap/*.md`**, **`brainstore/`** beyond README, **`state/`**, **`metadata/`** (keeps **`scan-state.json`**), **`index/`** data shards, or **`logs/*.log`**. Updates **`scripts/mutter.py`** when **`mutter-claude/templates/scripts/mutter.py`** exists (override with **`--mutter-py-source`**).
@@ -89,7 +95,7 @@ python3 scripts/mutter.py --help
 
 ### `ci`
 
-- **What:** Sequentially runs: `check-skill-refs` → `validate-tasks` → `validate-plans` → `sync_cursor_skills.py`. With `--check-cursor-sync`, runs `git diff --exit-code mutter-cursor/skills` after sync (skipped if `.git` missing).
+- **What:** Sequentially runs: `check-skill-refs` → `validate-tasks` → `validate-plans` → `sync_cursor_skills.py`. With `--check-cursor-sync`, runs `git diff --no-index --exit-code mutter-claude/skills mutter-cursor/skills` after sync (skipped if `.git` missing).
 - **Flags:** `--strict-tasks` adds `--warnings-as-errors` to both task and plan validation. `--check-cursor-sync` for parity enforcement. **`--with-governance`** also runs `validate-adr`, `scan-secrets`, and `guard-large-change` (for stricter pipelines).
 - **When:** GitHub Actions; maintainers before release.
 

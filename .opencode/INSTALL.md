@@ -14,7 +14,7 @@ Add Mutter to the `plugin` array in `opencode.json` (project or global under `~/
 
 Restart OpenCode. The package root is this repository; `package.json` points at `.opencode/plugins/mutter.js`, which registers `mutter-claude/skills` for discovery.
 
-Verify with the skill tool (list skills, then load e.g. `scan`, `status`, or `help`).
+Verify with the skill tool (list skills, then load e.g. `scan`, `status`, or `help`). When `scripts/mutter.py` exists in your project, run `python3 scripts/mutter.py agent-cadence` once for the canonical skill vs CLI map.
 
 OpenCode is installed separately from Claude Code or Codex — add the plugin in each harness you use.
 

@@ -25,12 +25,12 @@
   "interface": {
     "displayName": "Mutter",
     "shortDescription": "AI workspace orchestration under .mutter/",
-    "longDescription": "Use Mutter for incremental scans, index-first navigation, tasks and plans, checklist status via tasks-status/sync-task-progress, safe editing, reviews, and multi-worker workflows with low token use.",
+    "longDescription": "Use Mutter for incremental scans, index-first navigation, tasks and plans, checklist status via tasks-status/sync-task-progress, agent-cadence for when to run each CLI, safe editing, reviews, and multi-worker workflows with low token use.",
     "developerName": "Ventsislav Arnaudov",
     "category": "Coding",
     "capabilities": ["Interactive", "Read", "Write"],
     "defaultPrompt": [
-      "Run a Mutter incremental scan and summarize what changed.",
+      "Run python3 scripts/mutter.py agent-cadence and summarize the Mutter workflow phases.",
       "Show task checklist progress with mutter tasks-status.",
       "Create or update a Mutter task for the current goal."
     ],

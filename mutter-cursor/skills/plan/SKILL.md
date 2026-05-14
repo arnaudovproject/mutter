@@ -32,6 +32,8 @@ Write or update a plan file under `.mutter/plans/` containing:
 
 After writing the plan, optionally run **`python3 scripts/mutter.py validate-plan --plan .mutter/plans/<file>.md`** (from repo root) if `scripts/mutter.py` exists — catches missing Affected paths, **empty Testing/Verify fenced commands** (error), and thin Definition-of-done sections.
 
+For the full **phase → skill → CLI** map (agents), run **`python3 scripts/mutter.py agent-cadence`**.
+
 ## Chat output
 
 - Summarize plan in **≤15 bullets**; link to the plan file path.

@@ -1,11 +1,38 @@
 ---
 name: task
-description: Mutter task system — create (from roadmap when bare), update, split, execute one-by-one with progress sync, or run the whole current queue.
+description: Mutter task system — create, update, split, execute (with plans + roadmap when no exact path); progress sync; or run the whole current queue.
 ---
 
 # /mutter:task
 
 Parse **`$ARGUMENTS`** as a subcommand and payload. **Progress discipline:** whenever you finish an **execute** step (checkbox ticked in the task file), run **`python3 scripts/mutter.py sync-task-progress`** for that task so `.mutter/state/current.json` → **`execution_progress`** stays accurate, and keep appending **`.mutter/logs/tasks.log`**.
+
+## Location resolution (when no exact task path)
+
+Task bodies live under **`.mutter/tasks/{current,planned,blocked,completed}/`** (default bucket for new work: **`current/`**). Whenever **`create`**, **`update`**, **`split`**, or **`execute`** is invoked **without** a resolvable task path or slug:
+
+1. **Explicit path wins** — If the user (or payload) names a **repo-relative** path to a file under **`.mutter/`** (including **`tasks/planned/…`**, **`tasks/blocked/…`**, or another shard they point at), use that as the task file target. Do **not** ignore a supplied path to chase roadmap/plans instead.
+2. **State hints** — Read **`.mutter/state/current.json`**. If **`active_task`** is set and no task file was named, use it for **`update`**, **`split`**, or a **single-task** **`execute`**. If **`active_plan`** is set, open that plan for goal text, execution order, and affected paths when shaping or running work.
+3. **Plans (always consult when location is missing)** — Inventory **`.mutter/plans/*.md`** (skip `README.md`): skim **titles / goal lines / first heading** of each. Prefer matching the user’s words to a plan; set the task’s **Meta → Active plan (optional)** and cite the plan path in **Summary** when there is a clear fit. If **`validate-plan`** / **`status`** already surfaced an active plan, prefer that file first.
+4. **Roadmap (same)** — Inventory **`.mutter/roadmap/`** shards (titles, open milestones, unchecked bullets). Use them to name work, **Summary** scope, and cross-links—**including** for **`create …`** when the user gave a title or body but did not say where the work came from (tie the task to roadmap bullets that overlap).
+5. **Disambiguation** — If **multiple** tasks or plans match keywords, print **candidate paths** (task `.md` + plan + roadmap shard) in **≤10 lines** and ask **one** clarifying question. If **none** match, say so and suggest **`tasks-status`**, **`create`**, or pointing to a plan section.
+
+Token rule: for steps 3–4, read **only** headings / first sections of each plan or roadmap file unless one file clearly matches—then read that file a bit deeper.
+
+## Session hooks (scripts) — run when executing or continuing
+
+If **`scripts/mutter.py`** exists at the **repository root**:
+
+1. **Resume / “continue” / start execute:** **`python3 scripts/mutter.py status`** then **`python3 scripts/mutter.py tasks-status --task <slug>`** (or full table) so the next turn opens the right file with correct counts.
+2. **Cold onboarding (once per workspace or new agent thread):** **`python3 scripts/mutter.py agent-cadence --out .mutter/context/agent-cadence.md`** — canonical map of *when* to run each CLI vs skill (keeps later turns from improvising).
+
+## Task file shape (for small **execute** / **continue** slices)
+
+When **creating** or **splitting** tasks:
+
+- **One** top-level **Steps** `- [ ]` item = **one** agent turn (one **continue**) unless the user explicitly asked for unattended execution.
+- Each step’s **Read:** line must list **every** path (or index **shard + keys**) needed for that step — no “read the codebase”.
+- Use **nested bullets without checkboxes** for sub-notes only; anything that needs verification gets its **own** top-level step or a **child task** via **`split`**.
 
 ## Step completion messaging (required)
 
@@ -15,19 +42,21 @@ After **each** step you mark done, output a **short progress line** for that tas
 
 If **`$ARGUMENTS`** is empty or only whitespace:
 
-1. Treat it as **execute the whole queue**: consider every `*.md` under `.mutter/tasks/current/` (except `README.md`) in **lexicographic order**.
-2. **Skip** a file when **Meta `Status:` is `done`** *or* every top-level **Steps** checkbox is already `[x]` (no pending `- [ ]` step lines at the same markdown level as the template’s steps). Completed work **stays**; only tasks with remaining steps run.
-3. For **each** remaining task, run the same loop as **`execute`** (one step → update disk → log → **sync-task-progress** → **validate-task** if appropriate).
-4. After **each** step inside a task, if more steps remain in **that** file, **ask the user** whether to continue (unless they already asked for unattended execution).
+1. If **`.mutter/tasks/current/`** has **no** actionable task `*.md` (only `README.md` or empty), run **§ Location resolution** steps 3–4 and tell the user **open plan / roadmap items** that could become **`create`** targets—do not treat an empty queue as “nothing to do” without checking.
+2. Treat it as **execute the whole queue**: consider every `*.md` under `.mutter/tasks/current/` (except `README.md`) in **lexicographic order**.
+3. **Skip** a file when **Meta `Status:` is `done`** *or* every top-level **Steps** checkbox is already `[x]` (no pending `- [ ]` step lines at the same markdown level as the template’s steps). Completed work **stays**; only tasks with remaining steps run.
+4. For **each** remaining task, run the same loop as **`execute`** (one step → update disk → log → **sync-task-progress** → **validate-task** if appropriate).
+5. After **each** step inside a task, if more steps remain in **that** file, **ask the user** whether to continue (unless they already asked for unattended execution).
 
 ## Subcommands (prefix first token)
 
-- `create ...` — new markdown task in `.mutter/tasks/current/`. **Skeleton:** copy `.mutter/templates/TASK.md` to `tasks/current/<slug>.md`, replace placeholders, keep **Acceptance** and **Verify** concrete before starting long work. If the payload is empty or only `create` (no title or scope text), **first read every shard under `.mutter/roadmap/`** (and skim `.mutter/architecture/overview.md` + `decisions.md` tail for constraints), then **materialize tasks** from open roadmap bullets / milestones (one file per coherent unit of work, cross-link roadmap paths in each task’s Summary).
-- `update <task-file> ...` — patch sections (status, steps, notes) without rewriting unrelated tasks.
-- `split <task-file> ...` — break an oversized task into multiple linked tasks; mark parent `split`.
+- `create ...` — new markdown task in **`.mutter/tasks/current/`** (unless the user names another **`.mutter/tasks/<bucket>/`** path explicitly). **Skeleton:** copy `.mutter/templates/TASK.md` to `tasks/current/<slug>.md`, replace placeholders, keep **Acceptance** and **Verify** concrete before starting long work. **If the payload is empty or only `create`** (no title or scope text): read every shard under **`.mutter/roadmap/`** (and skim **`.mutter/architecture/overview.md`** + **`decisions.md`** tail), then **materialize tasks** from open roadmap bullets / milestones (one file per coherent unit, cross-link roadmap paths in each **Summary**). **If the user gave a title or scope but no plan/roadmap pointer:** still run **§ Location resolution** steps 3–4 and set **Active plan** / roadmap cross-links when a match exists.
+- `update ...` — patch sections (status, steps, notes) without rewriting unrelated tasks. Prefer **`update <task-file> ...`** where `<task-file>` is under **`.mutter/tasks/`**. **If `<task-file>` is missing:** resolve the target via **§ Location resolution** (`active_task` → keyword match across **`tasks/{current,planned,blocked}/`** → phrases in **`active_plan`** or other plan headings).
+- `split ...` — break an oversized task into multiple linked tasks; mark parent **`split`**. **If the parent task file is omitted:** resolve it the same way as **`update`** (§ Location resolution).
 - `execute` — behavior depends on the rest of **`$ARGUMENTS`**:
-  - **`execute` alone** — same as **Bare invocation** (whole **current** queue), **skipping** tasks that are already **done** or have **no remaining Steps checklists** (see Bare invocation).
-  - **`execute <task>`** — `<task>` may be a path, `.mutter/tasks/current/foo.md`, or a **slug** like `task-01` / `foo` (resolved like the CLI). If that task is **already complete**, report **`tasks-status --task`** and stop unless the user wants a reopen. Set **`active_task`** in `state/current.json`, then repeat: run the **next** unchecked top-level step only → edit with **`safe-edit`** discipline → tick the step → append **`tasks.log`** → **`sync-task-progress`** → print **Steps N/M** line → if **more** unchecked steps remain, **ask** the user to proceed; if **no** steps left, move on only when doing a multi-task queue, else stop.
+  - **`execute` alone** (nothing after `execute`) — same as **Bare invocation** (whole **current** queue), **skipping** tasks that are already **done** or have **no remaining Steps checklists** (see Bare invocation).
+  - **`execute <task>`** where `<task>` is a path, **`.mutter/tasks/...`**, or a **slug** — same as today: resolve like the CLI, set **`active_task`**, one step per loop. If that task is **already complete**, report **`tasks-status --task`** and stop unless the user wants a reopen.
+  - **`execute <free text>`** where `<free text>` is **not** a path or known slug — treat it as a **label**: search **`tasks/{current,planned,blocked}/`** titles and first headings, then **plan** titles and **roadmap** bullets (§ Location resolution). If **exactly one** task file matches, use it. If **zero**, report no match and suggest **`create`** or an explicit path. If **many**, list candidates and ask **one** question.
 
 ## Automation (scripts)
 
@@ -67,7 +96,7 @@ When this repository (or a consumer repo that vendors `scripts/mutter.py`) is on
 - `python3 scripts/mutter.py check-skill-refs` — ensures relative `.md` links in `mutter-claude/skills` and `mutter-cursor/skills` resolve (plugin development).
 - `python3 scripts/mutter.py ci --check-cursor-sync` — runs refs + task + plan validation + `sync_cursor_skills.py` and fails if Cursor skills drift from git (CI / maintainers). Add **`--with-governance`** to also run `validate-adr`, `scan-secrets`, and `guard-large-change`.
 
-Prefer running **`validate-task` before marking work done** so Acceptance, Verify (real fenced shell commands), and Affected paths are mechanically consistent. Use **`validate-plan`** after large `/mutter:plan` writes. For a new session on a risky change, run **`context-pack`** (or `preflight`) first.
+Prefer running **`validate-task` before marking work done** so Acceptance, Verify (real fenced shell commands), and Affected paths are mechanically consistent. Use **`validate-plan`** after large `/mutter:plan` writes. For a new session on a risky change, run **`context-pack`** (or `preflight`) first. Full phase → CLI map: **`python3 scripts/mutter.py agent-cadence`**.
 
 ## Rules
 

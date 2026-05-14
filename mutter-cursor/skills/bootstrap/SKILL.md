@@ -1,6 +1,7 @@
 ---
 name: bootstrap
 description: Initialize or refresh Mutter workspace from the bundled template — new install, or plugin file sync without wiping project tasks/plans/architecture.
+disable-model-invocation: true
 ---
 
 # /mutter:bootstrap
@@ -36,6 +37,6 @@ If the user invokes bootstrap again with **no material change** in the plugin te
 
 ## After bootstrap
 
-Tell the user to run **`/mutter:scan`** next, then **`/mutter:brainstore`** or **`/mutter:task`** as needed.
+Tell the user to run **`/mutter:scan`** next, then **`python3 scripts/mutter.py agent-cadence --out .mutter/context/agent-cadence.md`** once so agents know the CLI cadence, then **`/mutter:brainstore`** or **`/mutter:task`** as needed.
 
 When **`scripts/mutter.py`** is present: **`validate-task`**, **`validate-plan`**, **`preflight`**, **`context-pack`**.

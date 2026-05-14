@@ -14,15 +14,17 @@ Read `.mutter/core/project.md` first.
 
 ## Commands
 
-Use the Mutter plugin skills. In Claude Code, namespaced skills look like **`/mutter:<skill>`** (not a space). For example:
+Use the Mutter plugin skills. In Claude Code, namespaced skills look like **`/mutter:<skill>`** (not a space). When **`scripts/mutter.py`** exists, **start task-heavy work** with **`python3 scripts/mutter.py status`**; for a canonical map of *when* to run each CLI vs skill, run **`python3 scripts/mutter.py agent-cadence`** (optional **`--out .mutter/context/agent-cadence.md`**). Examples (most used first):
 
+- `/mutter:bootstrap` — `.mutter/` + workspace CLI install / upgrade path
 - `/mutter:scan` — incremental project scan
-- `/mutter:brainstore` — structured idea → intelligence files
-- `/mutter:task` — task create/update/split/execute (see skill body)
-- `/mutter:status` — task checklist progress table (pairs with `tasks-status` / `sync-task-progress`)
-- `/mutter:plan` — planning with risks and affected files
+- `/mutter:task` — create / update / split / execute (**one** Steps checkbox per turn unless user asked unattended); after each tick → **`sync-task-progress`**
+- `/mutter:status` — checklist table (pairs with **`tasks-status`**)
+- `/mutter:plan` — scoped plan; then **`validate-plan`**
 - `/mutter:safe-edit` — explain-then-edit discipline
-- `/mutter:review-diff` — architecture and quality review
+- `/mutter:review-diff` — senior-style quality + security review before merge
+- `/mutter:brainstore` — structured idea → intelligence files
+- `/mutter:roadmap` / `/mutter:architecture` — direction and boundaries
 - `/mutter:workers` — epic queue, multi-agent briefs, safe parallelism
 
 ## Safety

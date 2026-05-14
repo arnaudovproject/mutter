@@ -56,11 +56,10 @@ def main() -> None:
         if new_claude != text:
             src.write_text(new_claude, encoding="utf-8")
 
-        desc = data.get("description", "").strip()
-        new_fm_cursor = f"---\nname: {folder}\ndescription: {desc}\n---\n"
         out_dir = cursor_root / folder
         out_dir.mkdir(parents=True, exist_ok=True)
-        (out_dir / "SKILL.md").write_text(new_fm_cursor + body, encoding="utf-8")
+        # Byte-identical SKILL.md to mutter-claude (CI: git diff --no-index mutter-claude/skills mutter-cursor/skills).
+        (out_dir / "SKILL.md").write_text(new_claude, encoding="utf-8")
         n += 1
 
     print(f"Normalized {n} Claude skills + synced mutter-cursor/skills → {cursor_root}")

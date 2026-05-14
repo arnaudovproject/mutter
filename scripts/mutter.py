@@ -32,6 +32,7 @@ Usage (from repository root that contains `.mutter/`):
   python3 scripts/mutter.py tasks-status
   python3 scripts/mutter.py sync-task-progress
   python3 scripts/mutter.py bootstrap-sync
+  python3 scripts/mutter.py agent-cadence [--out .mutter/context/agent-cadence.md]
 """
 from __future__ import annotations
 
@@ -953,11 +954,18 @@ def cmd_ci(args: argparse.Namespace, repo_root: Path) -> int:
                 print("WARN: not a git repo — skip mutter-cursor/skills diff check", file=sys.stderr)
             else:
                 print(
-                    "+ git diff --exit-code mutter-claude/skills mutter-cursor/skills",
+                    "+ git diff --no-index --exit-code mutter-claude/skills mutter-cursor/skills",
                     flush=True,
                 )
                 p = subprocess.run(
-                    ["git", "diff", "--exit-code", "mutter-claude/skills", "mutter-cursor/skills"],
+                    [
+                        "git",
+                        "diff",
+                        "--no-index",
+                        "--exit-code",
+                        "mutter-claude/skills",
+                        "mutter-cursor/skills",
+                    ],
                     cwd=repo_root,
                 )
                 if p.returncode != 0:
@@ -1770,6 +1778,122 @@ def cmd_scan_todos(args: argparse.Namespace, repo_root: Path) -> int:
     return 0
 
 
+AGENT_CADENCE_MD = """# Mutter agent cadence
+
+Canonical **when to run which command**. **Repo root:** `{repo_root}`
+
+**Harness names:** **Claude Code** → `/mutter:<skill>` · **Cursor** → palette **mutter-<skill>** or the matching skill · **Codex / OpenCode** → load the same skill name from the Mutter plugin.
+
+All `python3 scripts/mutter.py …` lines assume the **repository root** (the directory that contains `.mutter/`).
+
+---
+
+## 0 — First-time setup (once per repo)
+
+| Order | Skill / action | CLI (when script exists) |
+|------:|----------------|--------------------------|
+| 1 | `/mutter:bootstrap` | After copy: `python3 scripts/mutter.py bootstrap-sync --dry-run` then `bootstrap-sync` on upgrades |
+| 2 | `/mutter:scan` | `python3 scripts/mutter.py scan-state` (after scan updates metadata) |
+
+---
+
+## 1 — Every new session (resume work)
+
+| Order | Why | Command |
+|------:|-----|---------|
+| 1 | See active task/plan on disk | `python3 scripts/mutter.py status` |
+| 2 | Readiness (optional strict) | `python3 scripts/mutter.py preflight` — add `--require-active-task --check-acceptance-verify` before executing steps |
+| 3 | One compact context file instead of wide reads | `python3 scripts/mutter.py context-pack --out .mutter/context/session-pack.md` |
+
+---
+
+## 2 — Ideas and direction (before locking scope)
+
+| When | Skill | Notes |
+|------|-------|-------|
+| Raw notes, research, spikes | `/mutter:brainstore` | Keeps chat short; intel lives under `.mutter/brainstore/` |
+| Boundaries, ADRs, system shape | `/mutter:architecture` | After ADR edits: `python3 scripts/mutter.py validate-adr` |
+| Themes / milestones / debt | `/mutter:roadmap` | Empty args: align roadmap with architecture; **`/mutter:task create`** with no title pulls from roadmap; with a title, still cross-link plans + roadmap when no path given |
+
+**Plan vs roadmap:** use **roadmap** for *what* over time; use **plan** for *how* for one change. Use **plan** before multi-file or risky edits even if roadmap already exists.
+
+---
+
+## 3 — Before implementation (scoped change)
+
+| Order | Skill | CLI |
+|------:|-------|-----|
+| 1 | `/mutter:plan` | `python3 scripts/mutter.py validate-plan` (or `--plan .mutter/plans/....md`) |
+| 2 | (optional) | `python3 scripts/mutter.py risk-check --from-git` |
+| 3 | Large / sensitive diff | `python3 scripts/mutter.py guard-large-change` — ensure `active_plan` in `state/current.json` |
+
+---
+
+## 4 — Tasks: create, split, execute (loop)
+
+| Step | Skill | CLI after disk update |
+|------|-------|----------------------|
+| Create work units | `/mutter:task create …` | If no explicit task path: inventory **`.mutter/plans/`** + **`.mutter/roadmap/`** and `state/current.json` for links; then `python3 scripts/mutter.py validate-task --task .mutter/tasks/current/<file>.md` |
+| One checkbox per agent turn | `/mutter:task execute <slug>` | After ticking a **Steps** line: **`python3 scripts/mutter.py sync-task-progress`** (same for **Acceptance** when you tick those) |
+| Progress for chat | `/mutter:status` | `python3 scripts/mutter.py tasks-status` or `--task <slug>` |
+| Implement the step | `/mutter:safe-edit` | Narrow tests: `python3 scripts/mutter.py suggest-tests --from-git` |
+
+**Rule:** do not batch many **Steps** checkboxes in one model response unless the user asked for unattended execution.
+
+---
+
+## 5 — Epics and parallelism
+
+| When | Skill |
+|------|-------|
+| Too many files for one task | `/mutter:task split` |
+| Parallel agents / packages | `/mutter:workers` |
+
+---
+
+## 6 — Before PR / merge
+
+| Order | Skill | CLI |
+|------:|-------|-----|
+| 1 | `/mutter:review-diff` | Writes `.mutter/reviews/…`; fix **Critical** before merge |
+| 2 | — | `python3 scripts/mutter.py suggest-tests --from-git` |
+| 3 | — | `python3 scripts/mutter.py scan-secrets` (best-effort; not a substitute for secret scanners in CI) |
+| 4 | — | `python3 scripts/mutter.py validate-task` / `validate-tasks` |
+| 5 | — | `python3 scripts/mutter.py pr-template` |
+
+---
+
+## 7 — After merge / release hygiene
+
+| When | Command |
+|------|---------|
+| CI / periodic | `python3 scripts/mutter.py validate-tasks` , `validate-plans` |
+| Changelog / comms | `python3 scripts/mutter.py report-change` |
+
+---
+
+## Token hygiene (short)
+
+- Open **only** paths listed in the active task step, `context-pack`, or index shards — not the whole tree.
+- Redirect long command output to **`.mutter/logs/`**; in chat: exit code + a few lines + path.
+- Prefer **one** fenced **Verify** block per task with **minimal** commands.
+"""
+
+
+def cmd_agent_cadence(args: argparse.Namespace, repo_root: Path) -> int:
+    body = AGENT_CADENCE_MD.format(repo_root=str(repo_root.resolve()))
+    if getattr(args, "out", None):
+        out: Path = args.out
+        if not out.is_absolute():
+            out = (repo_root / out).resolve()
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(body + "\n", encoding="utf-8")
+        print(f"Wrote {out.relative_to(repo_root.resolve())}")
+        return 0
+    print(body)
+    return 0
+
+
 def cmd_guard_large_change(args: argparse.Namespace, repo_root: Path) -> int:
     report = Report()
     files, ins, dels = git_diff_shortstat(repo_root)
@@ -2016,6 +2140,18 @@ def main() -> int:
     p_gl.add_argument("--critical-paths", type=int, default=1, help="Min HIGH-risk files to trigger guard.")
     p_gl.add_argument("--warnings-as-errors", action="store_true")
     p_gl.set_defaults(func=cmd_guard_large_change)
+
+    p_ac = sub.add_parser(
+        "agent-cadence",
+        help="Print Markdown: when to use each skill vs mutter.py subcommand (session, plan, task loop, PR).",
+    )
+    p_ac.add_argument(
+        "--out",
+        type=Path,
+        default=None,
+        help="Write cadence to this path (repo-relative or absolute) instead of stdout.",
+    )
+    p_ac.set_defaults(func=cmd_agent_cadence)
 
     args = ap.parse_args()
     start = args.root if args.root else Path.cwd()

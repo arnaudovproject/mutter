@@ -45,7 +45,7 @@ npm test -- path/to/file.test.ts
 
 ## Steps
 
-Do **one** step per agent turn unless the user explicitly asks otherwise.
+Do **one** top-level checkbox per agent turn (each **continue** / **execute**), unless the user explicitly asked for unattended execution. Nested bullets are notes only — they do **not** replace splittable work.
 
 - [ ] **Step 1 —** …
   - **Read:** `path/a`, `path/b`; shard: `index/....json` (keys: …)

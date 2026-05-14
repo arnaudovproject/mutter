@@ -33,7 +33,7 @@ Goal: enable AI to work on very large codebases with **high precision**, **low h
 | `.agents/plugins/marketplace.json` | **Codex** repo-scoped marketplace ([build plugins](https://developers.openai.com/codex/plugins/build)) — `mutter` → `./mutter-claude`. Codex also reads `.claude-plugin/marketplace.json` when present. |
 | `package.json` (repo root) | **OpenCode** git/npm plugin entry (`main` → `.opencode/plugins/mutter.js`); install with `mutter@git+https://github.com/arnaudovproject/mutter.git` per `.opencode/INSTALL.md`. |
 | `.opencode/plugins/mutter.js` | OpenCode plugin: registers `mutter-claude/skills` on `config.skills.paths` and injects bootstrap text from `mutter-claude/templates/CLAUDE.md`. |
-| `scripts/mutter.py` | **Workspace CLI** — validate tasks (`validate-task`, `validate-tasks`) and plans (`validate-plan`, `validate-plans`), `status`, `scan-state`, `check-skill-refs`, and `ci` (refs + tasks + plans + skill tree sync parity for Claude + Cursor). |
+| `scripts/mutter.py` | **Workspace CLI** — validate tasks (`validate-task`, `validate-tasks`) and plans (`validate-plan`, `validate-plans`), `status`, `scan-state`, **`agent-cadence`** (skill vs CLI map), `check-skill-refs`, and `ci` (refs + tasks + plans + skill tree sync parity for Claude + Cursor). |
 | `mutter-claude/templates/scripts/mutter.py` | **Bootstrap copy** — same script; bootstrap installs it to `<repo>/scripts/mutter.py` when missing. |
 
 ## `.mutter/` directory map
