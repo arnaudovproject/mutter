@@ -3,9 +3,78 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub](https://img.shields.io/github/stars/arnaudovproject/mutter?style=social)](https://github.com/arnaudovproject/mutter)
 
-**Mutter** is a plugin and methodology for an **AI workspace**: structured on-disk memory (`.mutter/`), token-efficient workflows, tasks, plans, incremental indexing, and shared rules across **Claude Code**, **Cursor**, **OpenAI Codex**, and **OpenCode**.
+**Mutter** brings a small **on-disk workspace** (folder **`.mutter/`**) into your repository so AI coding agents can **remember** architecture, tasks, and plans between sessions—without loading the whole tree into context. The same workflow patterns work across **Claude Code**, **Cursor**, **OpenAI Codex**, and **OpenCode**.
 
-The plugin id is **`mutter`** (lowercase). In **Claude Code**, skills are **`/mutter:<skill>`** (e.g. `/mutter:scan`). Docs may write “`/mutter scan`”; the colon form is what Claude Code expects.
+| Section | Best for |
+|---------|----------|
+| [Who is Mutter for?](#who-is-mutter-for) | Decide if this matches your workflow |
+| [Recommended first path](#recommended-first-path) | Install and first commands (Claude Code) |
+| [Five-minute example](#five-minute-example) | One concrete pass: bootstrap → task → validate |
+| [Installation](#installation) | Cursor, Codex, OpenCode, and full Claude steps |
+| [Typical workflow](#typical-workflow-your-repo) | Day-to-day and before-merge habits |
+| [Skills](#skills-most-used-first) · [Workspace CLI](#workspace-cli) | Reference tables |
+
+---
+
+## Who is Mutter for?
+
+Mutter fits **developers and teams** who already use (or plan to use) **AI coding agents** on **medium and large codebases** and want:
+
+- **Project memory on disk**—tasks, plans, architecture notes, and logs—not only chat history
+- **Repeatable agent behavior**—shared rules, checklists, and validation hooks
+- **Cheaper, calmer sessions**—indexes and small “context packs” instead of pasting the repo into every thread
+
+If you only touch a repo once for a tiny change, you might not need this much structure. If agents work across **days, branches, or multiple PRs**, Mutter is aimed at you.
+
+---
+
+## Recommended first path
+
+If you are new, start with **Claude Code** (the examples below use its **`/mutter:<skill>`** style):
+
+1. **Install the plugin** — follow [Quick install (Claude Code)](#quick-install-claude-code) (register the **repository root** that contains `.claude-plugin/marketplace.json`, then install **`mutter@mutter-plugins`**).
+2. Open **your project** in Claude Code and run **`/mutter:bootstrap`** — creates `.mutter/`, light entry files, and `scripts/mutter.py` when missing.
+3. Run **`/mutter:scan`** — builds incremental indexes under `.mutter/index/`.
+4. Run **`/mutter:help`** — see available skills and how they map to validation commands.
+
+**Other agents:** install Mutter for [Cursor](#cursor), [OpenAI Codex](#openai-codex), or [OpenCode](#opencode), then use the same *ideas* (bootstrap → scan → task/help); command names differ by **harness** (see [Typical workflow](#typical-workflow-your-repo)).
+
+---
+
+## Five-minute example
+
+In **your** repository, with the plugin installed:
+
+1. **`/mutter:bootstrap`**
+2. **`/mutter:scan`**
+3. **`/mutter:task create "Add user profile page"`** (or any small, clear task title)
+4. Ask your agent to **execute the first unchecked step** in the generated task (keep one main outcome per turn while learning the flow)
+5. Before you call the task “done”, from the repo root: **`python3 scripts/mutter.py validate-task`**
+
+That path covers the core loop; everything else in this README extends it (plans, PRD, reviews, CI helpers).
+
+---
+
+## Example: workspace CLI output
+
+After **bootstrap**, **`python3 scripts/mutter.py status`** shows where state lives and prints **`.mutter/state/current.json`** (active task, plan, and progress). Example:
+
+```text
+repo_root: /path/to/your/project
+state file: /path/to/your/project/.mutter/state/current.json
+{
+  "active_task": null,
+  "active_plan": null,
+  "active_workflow": null,
+  "execution_progress": null,
+  "paused": false,
+  "updated_at": null
+}
+```
+
+**`python3 scripts/mutter.py context-pack --out .mutter/context/session-pack.md`** writes a **Markdown bundle** (state, active task/plan slices when set, useful excerpts) you can attach when starting a **new** session—lighter than copying ad hoc file dumps.
+
+**Claude Code spelling:** skills are **`/mutter:<skill>`** (e.g. `/mutter:scan`). Some prose uses `/mutter scan`; Claude Code expects the **colon** form. Plugin id: **`mutter`** (lowercase).
 
 ---
 
@@ -29,13 +98,11 @@ Use the **marketplace** flow only — do **not** symlink into `~/.claude/plugins
 
 | Area | Description |
 |------|-------------|
-| **Project memory** | `.mutter/` holds architecture, tasks, plans, optional **PRD** (`.mutter/prd/PRD.md`), indexes, logs, rules — without monolithic chat dumps. |
-| **Navigation** | Index shards and explicit paths first; never load the whole repo into context. |
-| **Orchestration** | Scanning, `task`, `plan`, `prd`, `agent-cadence` (CLI map), `workers`, `safe-edit`, `review-diff`. |
-| **Discipline** | Tiny entry files (`CLAUDE.md`, Cursor rules); depth lives under `.mutter/`. |
-| **Tooling** | Optional workspace CLI: `scripts/mutter.py` for validation, preflight, context packs, CI helpers. |
-
-**Audience:** teams and large codebases where agents should follow one process, resume between sessions, and use fewer tokens for the same accuracy.
+| **Project memory** | `.mutter/` holds architecture, tasks, plans, optional product spec (**PRD** at `.mutter/prd/PRD.md`), indexes, logs, and rules—without monolithic chat dumps. |
+| **Navigation** | Index shards and explicit paths first; avoid loading the whole repo into context when a task names a smaller slice. |
+| **Orchestration** | **Skills** (agent commands like **scan**, **task**, **plan**) plus the **workspace CLI** (`scripts/mutter.py`) for validation, preflight, **context-pack**, **agent-cadence**, and CI-oriented checks. |
+| **Discipline** | Small repo-root entry files (**`CLAUDE.md`**, Cursor rules); detail stays under `.mutter/`. |
+| **Multi-harness** | Parity across Claude Code, Cursor, Codex, and OpenCode—see [Code layout (by harness)](#code-layout-by-harness). |
 
 - Full spec: [`SPEC.md`](SPEC.md)
 - Harness / plugin development: [`docs/mutter-plugin-harness-reference.md`](docs/mutter-plugin-harness-reference.md)
@@ -52,6 +119,8 @@ Use the **marketplace** flow only — do **not** symlink into `~/.claude/plugins
 | **OpenCode** | Root `package.json` + `.opencode/plugins/mutter.js` (registers `mutter-claude/skills`) |
 
 Cursor’s `mutter-cursor/skills/` is kept in sync with `mutter-claude/skills/` during Mutter development (`python3 scripts/sync_cursor_skills.py`).
+
+From here down, the README is **reference-heavy**: full install notes for every harness, the complete lifecycle workflow, and command tables. Skim the **quick links** table under the opening paragraph if you want to jump to one topic.
 
 ---
 
@@ -111,7 +180,7 @@ Restart OpenCode. More: [`.opencode/INSTALL.md`](.opencode/INSTALL.md) · [OpenC
 1. **`/mutter:bootstrap`** — `.mutter/`, entry files, `scripts/mutter.py` if missing
 2. **`/mutter:scan`** — `metadata/scan-state.json` + `index/` shards
 3. Optional: **`python3 scripts/mutter.py agent-cadence --out .mutter/context/agent-cadence.md`** — when to run which skill vs CLI
-4. Optional (product / application repos): **`python3 scripts/mutter.py prd-init`**, then **`python3 scripts/mutter.py validate-prd`** — canonical **`.mutter/prd/PRD.md`** (see **§2** below)
+4. Optional (product / application repos): **`python3 scripts/mutter.py prd-init`**, then **`python3 scripts/mutter.py validate-prd`** — canonical **`.mutter/prd/PRD.md`** (see **Direction** under step 2 below)
 
 ### 1 — New session (resume cheaply)
 
@@ -218,7 +287,9 @@ Other `*.md` files mirror skills (scan, plan, task, prd, …).
 
 ---
 
-## `scripts/mutter.py` (workspace CLI)
+## Workspace CLI
+
+Primary entry point: **`scripts/mutter.py`** (run from repo root after **bootstrap**).
 
 **Requirements:** Python 3 (stdlib for most commands). YAML boundaries may need **PyYAML** — see `.mutter/core/project.md` and `boundaries.json`.
 
