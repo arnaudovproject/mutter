@@ -26,6 +26,7 @@ export const MutterPlugin = async () => {
     const toolMapping = `**Harness: OpenCode**
 - List and load skills with OpenCode's native **skill** tool (e.g. load the \`scan\`, \`task\`, or \`status\` skill from this plugin).
 - When \`scripts/mutter.py\` exists: at session resume or before continuing task execution, run \`python3 scripts/mutter.py status\`; for a canonical map of when to run each CLI vs skill, run \`python3 scripts/mutter.py agent-cadence\` (optional \`--out .mutter/context/agent-cadence.md\`).
+- After **each finished** task step (not mid-step), follow the **~40% session context checkpoint** in the \`task\` skill — default to a **new session + \`context-pack\`** when usage is high.
 - Prefer **incremental** reads via \`.mutter/index/\` and active task/plan paths — never load the whole repository into context.
 - For official docs before web search, open **one** section of \`.mutter/memory/official-tech-docs-roadmap.md\` when that file exists in the project.`;
 

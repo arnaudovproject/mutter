@@ -18,7 +18,7 @@ Use the Mutter plugin skills. In Claude Code, namespaced skills look like **`/mu
 
 - `/mutter:bootstrap` — `.mutter/` + workspace CLI install / upgrade path
 - `/mutter:scan` — incremental project scan
-- `/mutter:task` — create / update / split / execute (**one** Steps checkbox per turn unless user asked unattended); after each tick → **`sync-task-progress`**
+- `/mutter:task` — create / update / split / execute (**one** Steps checkbox per turn unless user asked unattended); after each tick → **`sync-task-progress`** → **session context checkpoint (~40%)** (see task skill / **`agent-cadence`**)
 - `/mutter:status` — checklist table (pairs with **`tasks-status`**)
 - `/mutter:plan` — scoped plan; then **`validate-plan`**
 - `/mutter:safe-edit` — explain-then-edit discipline

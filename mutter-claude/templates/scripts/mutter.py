@@ -1977,10 +1977,24 @@ All `python3 scripts/mutter.py …` lines assume the **repository root** (the di
 |------|-------|----------------------|
 | Create work units | `/mutter:task create …` | If no explicit task path: inventory **`.mutter/plans/`** + **`.mutter/roadmap/`** and `state/current.json` for links; then `python3 scripts/mutter.py validate-task --task .mutter/tasks/current/<file>.md` |
 | One checkbox per agent turn | `/mutter:task execute <slug>` | After ticking a **Steps** line: **`python3 scripts/mutter.py sync-task-progress`** (same for **Acceptance** when you tick those) |
+| Session context gate | `/mutter:task` (after **each** finished step) | **§ Session context threshold (~40%)** below — only when the step is fully done on disk; **not** mid-step |
 | Progress for chat | `/mutter:status` | `python3 scripts/mutter.py tasks-status` or `--task <slug>` |
 | Implement the step | `/mutter:safe-edit` | Narrow tests: `python3 scripts/mutter.py suggest-tests --from-git` |
 
 **Rule:** do not batch many **Steps** checkboxes in one model response unless the user asked for unattended execution.
+
+### Session context threshold (~40%) — all harnesses (Claude, Cursor, Codex, OpenCode)
+
+After **each** completed **Steps** checkbox: progress line → **checkpoint** → (if steps remain) continue prompt. **Never** stop mid-step just because usage rose.
+
+Agents **usually cannot read** the IDE’s context meter. **Ask the user** for approximate **session / context fill %** (or low/medium/high). If a tool truly exposes a number, you may use it.
+
+- **≤ ~40%** — acknowledge and move on.
+- **> ~40%** or **unknown** — **Recommended default:** new agent session → **`python3 scripts/mutter.py status`** → **`python3 scripts/mutter.py context-pack --out .mutter/context/session-pack.md`** → work from that pack + active task + next **Read:** paths. Treat **yes / Enter / silence-as-agreement** as choosing this when you offered it as the default. **Opt-out** only when the user explicitly stays in the current thread (warn quality may drop).
+
+**Unattended** still means **one step per reply**; do **not** skip the checkpoint or chain another step silently.
+
+Full detail: **`/mutter:task`** skill → **Session context checkpoint**.
 
 ---
 
@@ -2019,6 +2033,7 @@ All `python3 scripts/mutter.py …` lines assume the **repository root** (the di
 - Open **only** paths listed in the active task step, `context-pack`, or index shards — not the whole tree.
 - Redirect long command output to **`.mutter/logs/`**; in chat: exit code + a few lines + path.
 - Prefer **one** fenced **Verify** block per task with **minimal** commands.
+- After **each** executed task **step**, apply **§ Session context threshold (~40%)** (task skill) before the next step.
 """
 
 

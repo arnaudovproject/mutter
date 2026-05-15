@@ -37,6 +37,7 @@ def main() -> int:
     out = r.stdout
     assert "Mutter agent cadence" in out
     assert "sync-task-progress" in out
+    assert "40%" in out or "~40%" in out
     assert "validate-prd" in out or "/mutter:prd" in out
     assert str(REPO) in out or ".mutter" in out
 

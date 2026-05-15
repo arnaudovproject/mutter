@@ -50,7 +50,7 @@ npm test -- path/to/file.test.ts
 
 ## Steps
 
-Do **one** top-level checkbox per agent turn (each **continue** / **execute**), unless the user explicitly asked for unattended execution. Nested bullets are notes only — they do **not** replace splittable work.
+Do **one** top-level checkbox per agent turn (each **continue** / **execute**), unless the user explicitly asked for unattended execution. After each completed step: **`sync-task-progress`**, then the **session context checkpoint (~40%)** in the **`task`** skill (new session + **`context-pack`** recommended when over threshold — **not** mid-step). Nested bullets are notes only — they do **not** replace splittable work.
 
 - [ ] **Step 1 —** …
   - **Read:** `path/a`, `path/b`; shard: `index/....json` (keys: …)

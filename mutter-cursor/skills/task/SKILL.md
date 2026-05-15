@@ -43,7 +43,22 @@ When **creating** or **splitting** tasks:
 
 ## Step completion messaging (required)
 
-After **each** step you mark done, output a **short progress line** for that task, e.g. **`Steps 2/5 done; Acceptance 1/3`** (derive counts the same way as **`python3 scripts/mutter.py tasks-status --task <slug>`**—run that command if you want a guaranteed consistent count). Then **ask** whether to continue with the next step if any checklists remain.
+After **each** step you mark done (checkbox ticked, log line, **`sync-task-progress`**): output a **short progress line** for that task, e.g. **`Steps 2/5 done; Acceptance 1/3`** (derive counts the same way as **`python3 scripts/mutter.py tasks-status --task <slug>`**—run that command if you want a guaranteed consistent count). Then run **§ Session context checkpoint** below. Only after that, if more **Steps** remain, **ask** whether to continue — **unless** the user already asked for unattended execution **and** the checkpoint shows **≤ ~40%** usage (or they confirmed “ok / low / under 40” in the same turn).
+
+## Session context checkpoint (after each completed step — all harnesses)
+
+Scope: **only after a task step is fully finished** (disk + sync done). **Never** interrupt mid-step because context crossed a threshold.
+
+Agents **usually cannot read** the host UI’s context meter (Cursor’s %, Claude Code usage, Codex, OpenCode, etc.). **Ask the user** for the approximate **session / context window fill %** (or a one-word band: “low / medium / high”). If the product exposes usage in-system and you truly have a number, you may use it — otherwise rely on the user.
+
+1. **≤ ~40%** — one line acknowledging the % (or band), then proceed with the usual “continue next step?” flow if steps remain.
+2. **> ~40%** (or unknown / “high” when they cannot read the meter) — treat as **elevated risk**. Present a **clear choice**:
+   - **Recommended (default):** Start a **new agent session** (fresh thread / chat). In that session: **`python3 scripts/mutter.py status`** → **`python3 scripts/mutter.py context-pack --out .mutter/context/session-pack.md`** → open **only** that pack + the active task file + the **next** unchecked **Read:** paths → continue with the **next** step. State that **doing nothing / “yes” / Enter** means this path.
+   - **Opt-out:** Continue in **this** session only if the user **explicitly** says so (e.g. “stay here”, “continue in this chat”), with a one-line warning that quality may drop.
+
+3. **Unattended execution:** Still **one step per model response**. You **must not** skip the checkpoint: end the turn with the **% question + default-new-session** offer when usage is unknown or high. Do **not** silently chain another step in the same reply after a heavy step.
+
+Harness hints for the user (when they do not know where to look): **Cursor** — context / usage indicator in the chat UI; **Claude Code** — usage / limit cues in the product chrome; **Codex / OpenCode** — whatever the environment shows for token or context consumption.
 
 ## Bare invocation (no subcommand)
 
@@ -52,8 +67,8 @@ If **`$ARGUMENTS`** is empty or only whitespace:
 1. If **`.mutter/tasks/current/`** has **no** actionable task `*.md` (only `README.md` or empty), run **§ Location resolution** steps 3–4 and tell the user **open plan / roadmap items** that could become **`create`** targets—do not treat an empty queue as “nothing to do” without checking.
 2. Treat it as **execute the whole queue**: consider every `*.md` under `.mutter/tasks/current/` (except `README.md`) in **lexicographic order**.
 3. **Skip** a file when **Meta `Status:` is `done`** *or* every top-level **Steps** checkbox is already `[x]` (no pending `- [ ]` step lines at the same markdown level as the template’s steps). Completed work **stays**; only tasks with remaining steps run.
-4. For **each** remaining task, run the same loop as **`execute`** (one step → update disk → log → **sync-task-progress** → **validate-task** if appropriate).
-5. After **each** step inside a task, if more steps remain in **that** file, **ask the user** whether to continue (unless they already asked for unattended execution).
+4. For **each** remaining task, run the same loop as **`execute`** (one step → update disk → log → **sync-task-progress** → **§ Session context checkpoint** → **validate-task** if appropriate).
+5. After **each** step inside a task, apply **§ Session context checkpoint**, then if more steps remain in **that** file, **ask the user** whether to continue (unless they already asked for unattended execution **and** checkpoint cleared as **≤ ~40%** or equivalent).
 
 ## Subcommands (prefix first token)
 
@@ -108,7 +123,7 @@ Prefer running **`validate-task` before marking work done** so Acceptance, Verif
 
 - **One-window rule:** each step must be doable with the step’s listed files + small index/context slice in roughly one model turn. If the goal needs unbounded exploration, **`split`** first or route exploration through **`workers`** with a capped path list.
 - Never attempt all steps of a large task in **one model response** unless the user explicitly asked for unattended execution.
-- After each executed step, update the task file, append a line to `.mutter/logs/tasks.log` with timestamp + step id, run **`sync-task-progress`**, and keep **`active_task`** pointing at the file you are executing.
+- After each executed step, update the task file, append a line to `.mutter/logs/tasks.log` with timestamp + step id, run **`sync-task-progress`**, keep **`active_task`** pointing at the file you are executing, then run **§ Session context checkpoint** before planning the next step in chat.
 
 ## Epics and multiple agents
 

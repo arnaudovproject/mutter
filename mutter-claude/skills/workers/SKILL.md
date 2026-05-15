@@ -28,7 +28,7 @@ Use when a goal is **too large for one context**, may take **many turns or hours
    - **Review** — short pass over stated diff/files (`review-diff` discipline); may be a separate worker with **diff-only** context.
    - **Shell** — bounded commands (tests, format) when the harness allows.
 4. **Integrate** — coordinator applies ordering: merge branches or sequential edits; resolve conflicts once, not in parallel writers.
-5. **Checkpoint** — if stopping mid-epic, leave the next unchecked step + `active_task` / `active_plan` in `.mutter/state/current.json` so the next session picks up without re-reading the whole repo.
+5. **Checkpoint** — if stopping mid-epic, leave the next unchecked step + `active_task` / `active_plan` in `.mutter/state/current.json` so the next session picks up without re-reading the whole repo. After **coordinator** steps that merge worker output (or tick a checklist item), apply the same **~40% session context checkpoint** as **`/mutter:task`** before heavy re-dispatch.
 
 ## Parallelism (safe)
 

@@ -137,7 +137,8 @@ Restart OpenCode. More: [`.opencode/INSTALL.md`](.opencode/INSTALL.md) · [OpenC
 1. **`/mutter:task create "…"`** — one **Steps** checkbox ≈ one agent turn (one **Read:** list, one outcome); **`split`** if a step needs “the whole repo”. Prefer **reuse** of existing modules/helpers (see **task** skill and **`TASK.md`** template). If no explicit task file, follow the **task** skill: check **`.mutter/plans/`**, **`.mutter/roadmap/`**, optionally **`.mutter/prd/PRD.md`**, **`.mutter/state/current.json`**
 2. Set **`active_task`** in **`.mutter/state/current.json`** when executing (per **task** skill)
 3. Per step: **`/mutter:safe-edit`** (or same discipline) → tick **one** step → append **`.mutter/logs/tasks.log`** → **`python3 scripts/mutter.py sync-task-progress`** → **`/mutter:status`** or **`python3 scripts/mutter.py tasks-status --task <slug>`**
-4. Before “done”: **`python3 scripts/mutter.py validate-task`**
+4. **Session context:** After a step is **fully** done (not mid-step), check your harness’s context meter. If it’s **~40% or higher**, the default recommendation is a **new chat**, then **`context-pack`** and **`status`**, then the next **Steps** line — see **`/mutter:task`** and **`agent-cadence`**. Staying in the same thread is fine if you explicitly choose it.
+5. Before “done”: **`python3 scripts/mutter.py validate-task`**
 
 ### 5 — After code lands
 
@@ -160,7 +161,7 @@ Restart OpenCode. More: [`.opencode/INSTALL.md`](.opencode/INSTALL.md) · [OpenC
 
 - **Disk coordinates** — scope, checklists, `execution_progress` live in `.mutter/` so new sessions do not replay the whole story in chat.
 - **One-window steps** — explicit paths + index keys per step; **`split`** or **`workers`** if too wide.
-- **context-pack** over ad-hoc multi-file pastes.
+- **context-pack** over ad-hoc multi-file pastes; pair with the **task** skill’s **~40% checkpoint** when a long session gets heavy.
 - **Logs off-transcript** — long output → **`.mutter/logs/`**; in chat: exit code, a few lines, path.
 - **Official docs** — before web search, open **one** section of **`memory/official-tech-docs-roadmap.md`** if your project maintains it.
 
@@ -174,7 +175,7 @@ Claude: **`/mutter:<name>`** · Cursor: same names + palette · Codex: plugin UI
 |-------|------|------|
 | **bootstrap** | No `.mutter/` or upgrade | Template; **`bootstrap-sync`** refreshes shipped files without wiping tasks/plans/architecture. |
 | **scan** | After real code change | Incremental scan, indexes, `scan-state`. |
-| **task** | Work on disk | **create** / **update** / **split** / **execute**; one **Steps** box per turn; **`sync-task-progress`** after each tick; bare **task** = current queue. |
+| **task** | Work on disk | **create** / **update** / **split** / **execute**; one **Steps** box per turn; **`sync-task-progress`** after each tick; **~40% session checkpoint** after each finished step (new session + **`context-pack`** when high); bare **task** = current queue. |
 | **status** | Progress | With **`tasks-status`**. |
 | **plan** | Multi-file or risky change | Scoped plan + verify; then **`validate-plan`**. |
 | **safe-edit** | Any edit | Explain → minimal diff → narrow verify; long output → **`.mutter/logs/`**. |

@@ -48,6 +48,7 @@ Mutter does not ship a separate agent runtime; behavior comes from **discipline 
 5. **Verify before “done”** — tasks and plans should name commands or observable checks; run the narrowest check that proves the step.
 6. **Team-scale guardrails (optional)** — `python3 scripts/mutter.py preflight`, `context-pack`, `risk-check`, `guard-large-change`, and `scan-secrets` complement validation; keep config in `.mutter/testing/`, `ownership/`, `adr/`, `boundaries.json`.
 7. **CLI cadence on disk** — `python3 scripts/mutter.py agent-cadence` (optional `--out .mutter/context/agent-cadence.md`) records *when* to run each subcommand so new sessions do not re-derive process from chat.
+8. **Session context threshold** — after each **finished** task step (once disk is updated), agents run the **~40% checkpoint** in the **`task`** skill: prefer **`context-pack`** in a **new** session when usage is high; never interrupt a step mid-flight just because context grew.
 
 ## Root entry files
 
