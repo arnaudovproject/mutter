@@ -17,6 +17,11 @@ If **`active_workflow`** in **`state/current.json`** already matches **`$ARGUMEN
 2. Set `.mutter/state/current.json` `active_workflow` to that name.
 3. Execute steps **incrementally**—do not jump to implementation before plan/task steps when the workflow forbids it.
 
+## When a checklist item fails
+
+- **Do not** check off a step you did not actually complete. Record the blocker (task **Notes**, plan comment, or a short line under **`.mutter/logs/`** with a path pointer in chat).
+- **One** narrowed in-scope retry is fine if the fix is obvious; if not, **`split`** the work, move the task to **`blocked/`** when appropriate, or route the remainder through **`/mutter:task`** with smaller **Steps** — same stop-and-escalate discipline as **§ Stuck handling** in the **task** skill.
+
 ## Token rules
 
 - Quote at most **8 lines** of the workflow file in chat; otherwise point to path.

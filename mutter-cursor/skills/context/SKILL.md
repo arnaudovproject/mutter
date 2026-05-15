@@ -18,7 +18,7 @@ If **`.mutter/context/<bundle>.md`** already exists and **`$ARGUMENTS`** maps to
    - Linked file paths (not full contents)
    - 5–15 bullet facts the agent must remember for this bundle
    - “Out of scope” list to prevent wandering reads
-   - Optional **resume line**: pointer to `state/current.json` and the active task/plan filename so a new session can rehydrate without replaying chat
+   - Optional **resume line** (keep it one tight sentence): **`state/current.json`**, active task **path**, active plan path if any, the **next** unchecked **Steps** line (first line of that step), and the **Verify** fenced command(s) to re-run after edits — enough for a cold session to continue without transcript replay
 3. Never paste large file bodies into the bundle file.
 
 ## Chat output

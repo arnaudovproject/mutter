@@ -14,6 +14,10 @@ Goal text or target files may arrive as **`$ARGUMENTS`**.
 3. List **architecture** touchpoints (which `architecture/*.md` or ADRs apply).
 4. List **dependencies** that might break (imports, shared types, configs).
 
+## Explicit go-ahead (high-risk edits)
+
+- If **`python3 scripts/mutter.py risk-check`** (or your read of the change) shows **HIGH** risk, the edit would remove or migrate user data, or it touches auth, crypto, secrets, or externally visible contracts: finish the bullet lists above, then **pause before any Write/Edit** until the user gives a clear **proceed** or a revised scope. Do not apply the diff while waiting.
+
 ## Execution
 
 - Apply **smallest** change that satisfies the current step; prefer one logical commit worth of work per invocation unless user asked broader scope.

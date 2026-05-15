@@ -14,7 +14,7 @@ Use when a goal is **too large for one context**, may take **many turns or hours
 ## Principles
 
 1. **Coordinator** (this session, or a dedicated planning pass) owns the queue and merges outcomes. Workers do not silently redefine scope.
-2. **Fresh brief per worker** — each dispatch gets a self-contained packet: objective, acceptance criteria, explicit path list (from `.mutter/index/` + plan), and forbidden actions. Do **not** paste the full chat history into a worker.
+2. **Fresh brief per worker** — each dispatch gets a self-contained packet: objective, acceptance criteria, explicit path list (from `.mutter/index/` + plan), and forbidden actions. Do **not** paste the full chat history into a worker. Include a short **contract**: coordinator invariants (API shape, filenames that are already decided), **inputs** the worker may assume (paths, facts), and **outputs** you expect back (bullet findings, ordered patch intents, exit codes from named commands) so merges stay deterministic.
 3. **State on disk** — after every worker: update `.mutter/tasks/` or the active `.mutter/plans/*` checklist, append `.mutter/logs/` if useful, point `.mutter/state/current.json` at the next package. Resume must work from files alone.
 4. **Evidence before “done”** — each package lists verification (commands or checks). Coordinator runs or delegates verification, then ticks the step.
 

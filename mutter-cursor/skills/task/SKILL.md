@@ -133,6 +133,15 @@ For goals spanning many files or sessions, use **`workers`** after splitting: on
 
 - When displaying a task in chat, show **title, status, current step only** unless user asks for full file.
 
+## Verify and acceptance gate (no “checked” without truth)
+
+- If **Verify** fenced commands fail, **Acceptance** items are still false after the step’s work, or a stated observable check contradicts the step goal: **do not** mark that **Steps** line `[x]`.
+- Append a short **Evidence** note (command(s), exit code, 1–3 signal lines, or a pointer to a digest under **`.mutter/logs/`**). Narrow the scope or fix the failure, then **one** bounded re-attempt of the **same** step. If the **same failure class** repeats with no new evidence, follow **§ Stuck handling** — do not loop tight retries in chat.
+
+## Cold handoff envelope (new session after elevated context)
+
+When **§ Session context checkpoint** recommends a **new session** + **`context-pack`**, the opening turn should treat this **file set** as the full dependency surface (no reliance on prior chat): the pack path (e.g. **`.mutter/context/session-pack.md`**), **`.mutter/state/current.json`**, the **active** task markdown, and **only** the **next** unchecked step’s **Read:** paths. Optionally add **`python3 scripts/mutter.py tasks-status --task <slug>`** so checklist counts match disk.
+
 ## Stuck handling
 
 - If the same failure pattern repeats twice with no new evidence, **stop**: append a short note to the task, set `blocked` or split into a smaller step, and log under `.mutter/logs/` instead of burning context re-trying blindly.

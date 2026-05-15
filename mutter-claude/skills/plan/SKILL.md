@@ -28,7 +28,7 @@ Write or update a plan file under `.mutter/plans/` containing:
 5. **API / data migration impact** if any
 6. **Testing strategy** (commands + what to assert)
 7. **Execution order** (ordered checklist, each step verifiable)
-8. **Definition of done / must-haves** — short list of mechanically checkable outcomes (commands to run, files that must exist, behaviors to assert). Prefer “lint passes on touched package” over vague “code quality OK”.
+8. **Definition of done / must-haves** — short list of mechanically checkable outcomes (commands to run, files that must exist, behaviors to assert). Prefer “lint passes on touched package” over vague “code quality OK”. When this plan drives **tasks**, those checks are the bar for ticking **Steps**: failing commands stay unchecked with evidence on disk (same discipline as **`/mutter:task`**).
 9. For **epic / multi-hour** scope: note work packages suitable for **`workers`** (explicit file caps per package, which packages may run read-only in parallel).
 
 After writing the plan, optionally run **`python3 scripts/mutter.py validate-plan --plan .mutter/plans/<file>.md`** (from repo root) if `scripts/mutter.py` exists — catches missing Affected paths, **empty Testing/Verify fenced commands** (error), and thin Definition-of-done sections.
