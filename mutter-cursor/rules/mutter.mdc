@@ -18,7 +18,7 @@ Read `.mutter/core/project.md` before substantive work.
 
 ## Plugin alignment
 
-When the **Mutter** Cursor plugin is installed, use its skills/commands for Mutter workflows. In **Claude Code**, the same workflows are **`/mutter:<skill>`** (e.g. `/mutter:scan`). In Cursor, use palette commands (**mutter-scan**, **mutter-task**, **mutter-status**, **mutter-agent-cadence**, …) or ask the agent to follow the matching skill.
+When the **Mutter** Cursor plugin is installed, use its skills/commands for Mutter workflows. In **Claude Code**, the same workflows are **`/mutter:<skill>`** (e.g. `/mutter:scan`). In Cursor, use palette commands (**mutter-scan**, **mutter-task**, **mutter-prd**, **mutter-status**, **mutter-agent-cadence**, …) or ask the agent to follow the matching skill.
 
 When **`scripts/mutter.py`** exists at the repo root: at **session resume** or before **execute/continue** on tasks, run **`python3 scripts/mutter.py status`**; for the canonical *when to run which CLI* map, run **`python3 scripts/mutter.py agent-cadence`** (optional **`--out .mutter/context/agent-cadence.md`**). Full index: **`/mutter:help`** (Claude) or **mutter-help** / **help** skill (Cursor).
 

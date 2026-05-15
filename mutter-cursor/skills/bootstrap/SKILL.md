@@ -40,3 +40,5 @@ If the user invokes bootstrap again with **no material change** in the plugin te
 Tell the user to run **`/mutter:scan`** next, then **`python3 scripts/mutter.py agent-cadence --out .mutter/context/agent-cadence.md`** once so agents know the CLI cadence, then **`/mutter:brainstore`** or **`/mutter:task`** as needed.
 
 When **`scripts/mutter.py`** is present: **`validate-task`**, **`validate-plan`**, **`preflight`**, **`context-pack`**.
+
+For repos where AI agents need a stable **product** narrative (“what / why”), optionally run **`python3 scripts/mutter.py prd-init`** once (then **`validate-prd`**) so **`.mutter/prd/PRD.md`** exists; skip when not meaningful (e.g. thin infra-only repos).

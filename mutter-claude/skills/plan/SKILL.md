@@ -14,6 +14,7 @@ Before creating a **new** dated file under **`.mutter/plans/`**, **list existing
 ## Preconditions
 
 - Skim `.mutter/core/project.md`, `.mutter/architecture/overview.md`, and **only** index shards likely related (infer from keywords in `$ARGUMENTS`).
+- When **`.mutter/prd/PRD.md`** exists, skim **Goals**, **Problem**, **Functional requirements**, and **Scope** so the plan matches current product intent; if intent drifted, update PRD first (see **`/mutter:prd`**) before committing plan paths.
 - Read `.mutter/state/current.json` for active task/workflow if set.
 
 ## Deliverable

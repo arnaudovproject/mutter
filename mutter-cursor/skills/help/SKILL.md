@@ -20,6 +20,7 @@ Namespace is **`/mutter:<skill-folder>`** (plugin `name` is `mutter`).
 | `safe-edit` | Explain impact, then edit in small steps |
 | `review-diff` | Senior-style diff review → `.mutter/reviews/` |
 | `brainstore` | Idea → structured intelligence under `.mutter/brainstore/` |
+| `prd` | Workspace **Product Requirements Document** at `.mutter/prd/PRD.md` (`prd-init`, `validate-prd`) |
 | `roadmap` | Roadmap maintenance; empty args → align with architecture |
 | `architecture` | Architecture files + ADRs |
 | `workers` | Epic work: queue, multi-agent briefs, safe parallelism |
@@ -46,4 +47,4 @@ Always keep **root** `CLAUDE.md` and **`.cursor/rules/mutter.mdc`** small; put b
 
 ## Workspace CLI (optional)
 
-If **`scripts/mutter.py`** exists at the repo root (installed by **bootstrap** when missing), run **`python3 scripts/mutter.py --help`**. **Session map:** **`agent-cadence`** (optional **`--out .mutter/context/agent-cadence.md`**). Common entrypoints: **`status`**, **`preflight`**, **`context-pack`**, **`tasks-status`**, **`sync-task-progress`**, **`validate-task`**, **`bootstrap-sync`**, **`validate-plans`**, **`risk-check`**, **`suggest-tests`**, **`pr-template`**, **`scan-secrets`**, **`guard-large-change`**. Full reference: **`docs/mutter-workspace-tools-audit.md`**. Optional git hook: enable with `git config core.hooksPath scripts/git-hooks` after clone.
+If **`scripts/mutter.py`** exists at the repo root (installed by **bootstrap** when missing), run **`python3 scripts/mutter.py --help`**. **Session map:** **`agent-cadence`** (optional **`--out .mutter/context/agent-cadence.md`**). Common entrypoints: **`status`**, **`preflight`**, **`context-pack`**, **`tasks-status`**, **`sync-task-progress`**, **`validate-task`**, **`bootstrap-sync`**, **`validate-plans`**, **`prd-init`**, **`validate-prd`**, **`risk-check`**, **`suggest-tests`**, **`pr-template`**, **`scan-secrets`**, **`guard-large-change`**. Full reference: **`docs/mutter-workspace-tools-audit.md`**. Optional git hook: enable with `git config core.hooksPath scripts/git-hooks` after clone.

@@ -16,7 +16,7 @@ This document is a **single source of truth** for what the Mutter project ships 
 | Bootstrap template (dot-mutter) | `mutter-claude/templates/dot-mutter/` | Copied to `<consumer>/.mutter/` on bootstrap |
 | Bootstrap template (CLI) | `mutter-claude/templates/scripts/mutter.py` | Copy of `scripts/mutter.py`; installed to `<consumer>/scripts/mutter.py` when missing |
 | Git hook (optional) | `scripts/git-hooks/pre-commit` | Runs task + plan validation before commit when enabled |
-| Cursor palette commands | `mutter-cursor/commands/*.md` → **mutter-agent-cadence**, **mutter-validate**, **mutter-preflight**, **mutter-context-pack**, **mutter-governance**, **mutter-status**, … | Steers the agent to run `scripts/mutter.py` with the right cwd and subcommands |
+| Cursor palette commands | `mutter-cursor/commands/*.md` → **mutter-agent-cadence**, **mutter-validate**, **mutter-preflight**, **mutter-context-pack**, **mutter-governance**, **mutter-status**, **mutter-prd**, … | Steers the agent to run `scripts/mutter.py` with the right cwd and subcommands |
 | CI workflow | `.github/workflows/mutter-check.yml` | Runs `python3 scripts/mutter.py ci --check-cursor-sync` on push/PR |
 
 ---
@@ -56,6 +56,19 @@ python3 scripts/mutter.py --help
 - **What:** Runs `validate-plan` logic on every `*.md` in `.mutter/plans/` except `README.md`.
 - **When:** CI, pre-commit hook.
 
+### `prd-init`
+
+- **What:** Ensures **`.mutter/prd/`** exists and writes **`.mutter/prd/PRD.md`** from **`.mutter/templates/PRD.md`** when missing (falls back to `mutter-claude/templates/dot-mutter/templates/PRD.md` only when developing inside this monorepo layout).
+- **Flags:** **`--force`** replaces an existing PRD.
+- **When:** First-time product capture; onboarding agents that expect **`.mutter/prd/PRD.md`**.
+
+### `validate-prd`
+
+- **What:** Structure check for the workspace PRD (Overview, Goals/Objectives excluding non-goals headings, Problem/Pain, Users/Audience/Personas; warns on thin Scope / Functional requirements).
+- **Default file:** **`.mutter/prd/PRD.md`**.
+- **Override:** **`--prd <path>`**.
+- **When:** After substantive PRD edits; optional hygiene before locking roadmap/plan scope.
+
 ### `status`
 
 - **What:** Prints `repo_root`, path to `current.json`, full JSON, and short previews of resolved **active_task** and **active_plan** when set.
@@ -79,7 +92,7 @@ python3 scripts/mutter.py --help
 
 ### `bootstrap-sync`
 
-- **What:** Copies **plugin-managed** files from **`--template-root`** (default: `./mutter-claude/templates/dot-mutter` when present) into **`.mutter/`** — e.g. `templates/`, `quality-gates/`, `workflows/`, `adr/` files shipped with the template, `testing/commands.json`, `core/project.md`, README stubs. **Does not** overwrite **`tasks/`** (except `tasks/current/README.md`), user **`plans/*.md`**, **`architecture/`**, user **`roadmap/*.md`**, **`brainstore/`** beyond README, **`state/`**, **`metadata/`** (keeps **`scan-state.json`**), **`index/`** data shards, or **`logs/*.log`**. Updates **`scripts/mutter.py`** when **`mutter-claude/templates/scripts/mutter.py`** exists (override with **`--mutter-py-source`**).
+- **What:** Copies **plugin-managed** files from **`--template-root`** (default: `./mutter-claude/templates/dot-mutter` when present) into **`.mutter/`** — e.g. `templates/`, `quality-gates/`, `workflows/`, `adr/` files shipped with the template, `testing/commands.json`, `core/project.md`, **`prd/README.md`**, README stubs. **Does not** overwrite **`tasks/`** (except `tasks/current/README.md`), user **`plans/*.md`**, **`architecture/`**, user **`roadmap/*.md`**, **`brainstore/`** beyond README, **`state/`**, **`metadata/`** (keeps **`scan-state.json`**), **`index/`** data shards, or **`logs/*.log`**. Updates **`scripts/mutter.py`** when **`mutter-claude/templates/scripts/mutter.py`** exists (override with **`--mutter-py-source`**).
 - **Flags:** **`--dry-run`** lists planned copies.
 - **When:** Re-run **`/mutter:bootstrap`** / plugin upgrade to merge new Mutter template + CLI into a repo that already has `.mutter/`.
 
@@ -116,7 +129,7 @@ python3 scripts/mutter.py --help
 
 ### `context-pack`
 
-- **What:** Prints (or `--out file`) a Markdown bundle: `state/current.json`, active task/plan excerpts, changed paths (scan-state or git), ADR previews, `ownership/modules.md` excerpt, `architecture/decisions.md` tail.
+- **What:** Prints (or `--out file`) a Markdown bundle: `state/current.json`, active task/plan excerpts, **PRD excerpt when `.mutter/prd/PRD.md` exists**, changed paths (scan-state or git), ADR previews, `ownership/modules.md` excerpt, `architecture/decisions.md` tail.
 - **When:** New chat session or hand-off to another agent.
 
 ### `risk-check`
@@ -189,7 +202,7 @@ After that, the same CLI commands apply in the consumer repo.
 
 | Item | Detail |
 |------|--------|
-| **Command** | **mutter-validate**, **mutter-preflight**, **mutter-context-pack**, **mutter-governance** (from `mutter-cursor/commands/`) |
+| **Command** | **mutter-validate**, **mutter-preflight**, **mutter-context-pack**, **mutter-governance**, **mutter-prd**, … (from `mutter-cursor/commands/`) |
 | **Purpose** | Steers the agent to run `scripts/mutter.py` with the right cwd and subcommands |
 | **Install** | Team marketplace / local plugin per Cursor docs |
 
@@ -199,8 +212,9 @@ Claude Code has no separate `validate` slash skill; use **`/mutter:task`** and *
 
 ## 6. Skills that mention the CLI
 
-- **`task`** — Automation (scripts): validation, governance (`preflight`, `context-pack`, `risk-check`, `pr-template`, `suggest-tests`, `check-boundaries`, `scan-secrets`, `guard-large-change`, `validate-adr`, `validate-quality-gate`, `validate-migrations`), `status`, `scan-state`, `check-skill-refs`, `ci`.
+- **`task`** — Automation (scripts): validation, governance (`preflight`, `context-pack`, `risk-check`, `pr-template`, `suggest-tests`, `check-boundaries`, `scan-secrets`, `guard-large-change`, `validate-adr`, `validate-quality-gate`, `validate-migrations`, `validate-prd`, `prd-init`), `status`, `scan-state`, `check-skill-refs`, `ci`.
 - **`plan`** — Optional `validate-plan` after writing a plan.
+- **`prd`** — `prd-init` / `validate-prd`; aligns tasks/plans with `.mutter/prd/PRD.md`.
 - **`bootstrap`** — Installs `scripts/mutter.py` when missing; after bootstrap mentions validation + governance commands.
 - **`help`** — Points to `--help` and `docs/mutter-workspace-tools-audit.md`.
 

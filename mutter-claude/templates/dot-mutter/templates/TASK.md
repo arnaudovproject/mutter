@@ -20,6 +20,11 @@ One or two sentences: what changes and why.
 
 - …
 
+## Reuse and consolidation
+
+- Before adding new shared logic or UI, search existing modules listed under **Affected** (and related index shards).
+- Prefer extending existing helpers/components over copy-paste duplication unless this task documents an intentional fork.
+
 ## Affected
 
 - **Domains:** e.g. backend, frontend, infra

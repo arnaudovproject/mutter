@@ -24,6 +24,7 @@ Use the Mutter plugin skills. In Claude Code, namespaced skills look like **`/mu
 - `/mutter:safe-edit` — explain-then-edit discipline
 - `/mutter:review-diff` — senior-style quality + security review before merge
 - `/mutter:brainstore` — structured idea → intelligence files
+- `/mutter:prd` — workspace Product Requirements Document (`.mutter/prd/PRD.md`)
 - `/mutter:roadmap` / `/mutter:architecture` — direction and boundaries
 - `/mutter:workers` — epic queue, multi-agent briefs, safe parallelism
 

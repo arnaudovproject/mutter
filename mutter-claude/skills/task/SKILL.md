@@ -13,11 +13,12 @@ Task bodies live under **`.mutter/tasks/{current,planned,blocked,completed}/`** 
 
 1. **Explicit path wins** — If the user (or payload) names a **repo-relative** path to a file under **`.mutter/`** (including **`tasks/planned/…`**, **`tasks/blocked/…`**, or another shard they point at), use that as the task file target. Do **not** ignore a supplied path to chase roadmap/plans instead.
 2. **State hints** — Read **`.mutter/state/current.json`**. If **`active_task`** is set and no task file was named, use it for **`update`**, **`split`**, or a **single-task** **`execute`**. If **`active_plan`** is set, open that plan for goal text, execution order, and affected paths when shaping or running work.
-3. **Plans (always consult when location is missing)** — Inventory **`.mutter/plans/*.md`** (skip `README.md`): skim **titles / goal lines / first heading** of each. Prefer matching the user’s words to a plan; set the task’s **Meta → Active plan (optional)** and cite the plan path in **Summary** when there is a clear fit. If **`validate-plan`** / **`status`** already surfaced an active plan, prefer that file first.
-4. **Roadmap (same)** — Inventory **`.mutter/roadmap/`** shards (titles, open milestones, unchecked bullets). Use them to name work, **Summary** scope, and cross-links—**including** for **`create …`** when the user gave a title or body but did not say where the work came from (tie the task to roadmap bullets that overlap).
-5. **Disambiguation** — If **multiple** tasks or plans match keywords, print **candidate paths** (task `.md` + plan + roadmap shard) in **≤10 lines** and ask **one** clarifying question. If **none** match, say so and suggest **`tasks-status`**, **`create`**, or pointing to a plan section.
+3. **Product intent** — When **`.mutter/prd/PRD.md`** exists and location/plans/tasks are ambiguous, skim PRD **Goals / Functional requirements / Scope** before inventing scope (prefer linking tasks to PRD sections when helpful).
+4. **Plans (always consult when location is missing)** — Inventory **`.mutter/plans/*.md`** (skip `README.md`): skim **titles / goal lines / first heading** of each. Prefer matching the user’s words to a plan; set the task’s **Meta → Active plan (optional)** and cite the plan path in **Summary** when there is a clear fit. If **`validate-plan`** / **`status`** already surfaced an active plan, prefer that file first.
+5. **Roadmap (same)** — Inventory **`.mutter/roadmap/`** shards (titles, open milestones, unchecked bullets). Use them to name work, **Summary** scope, and cross-links—**including** for **`create …`** when the user gave a title or body but did not say where the work came from (tie the task to roadmap bullets that overlap).
+6. **Disambiguation** — If **multiple** tasks or plans match keywords, print **candidate paths** (task `.md` + plan + roadmap shard) in **≤10 lines** and ask **one** clarifying question. If **none** match, say so and suggest **`tasks-status`**, **`create`**, or pointing to a plan section.
 
-Token rule: for steps 3–4, read **only** headings / first sections of each plan or roadmap file unless one file clearly matches—then read that file a bit deeper.
+Token rule: for steps 4–5, read **only** headings / first sections of each plan or roadmap file unless one file clearly matches—then read that file a bit deeper.
 
 ## Session hooks (scripts) — run when executing or continuing
 
@@ -33,6 +34,12 @@ When **creating** or **splitting** tasks:
 - **One** top-level **Steps** `- [ ]` item = **one** agent turn (one **continue**) unless the user explicitly asked for unattended execution.
 - Each step’s **Read:** line must list **every** path (or index **shard + keys**) needed for that step — no “read the codebase”.
 - Use **nested bullets without checkboxes** for sub-notes only; anything that needs verification gets its **own** top-level step or a **child task** via **`split`**.
+
+## Reuse and consolidation
+
+- Before adding **new** modules, helpers, API surfaces, or UI patterns, search for existing implementations (paths already under **Affected**, relevant index shards, packages referenced from PRD/architecture).
+- Prefer **extending or calling shared code** over duplicating logic unless the task documents why divergence is required.
+- When consolidating or reusing, list **all** impacted paths in **Affected** and call out shared entry points in **Steps** so validators and reviewers see the reuse explicitly.
 
 ## Step completion messaging (required)
 
@@ -69,9 +76,8 @@ When this repository (or a consumer repo that vendors `scripts/mutter.py`) is on
 - `python3 scripts/mutter.py validate-plan` / **`validate-plans`** — same idea for `.mutter/plans/*.md` (Affected paths, **Testing/Verify fenced commands required**, Definition of done); `validate-plan` uses `active_plan` when `--plan` is omitted.
 - `python3 scripts/mutter.py validate-adr` — checks `.mutter/adr/*.md` for Status + Context/Decision/Consequences sections.
 - `python3 scripts/mutter.py validate-quality-gate --type <bugfix|feature|refactor|migration|security>` — ensures `.mutter/quality-gates/<type>.md` exists and has checklist structure.
-- `python3 scripts/mutter.py validate-migrations` — if migration-like paths changed in git diff, requires rollback/backup/backward-compat language in the active task/plan.
-
-**State, scan, and task progress**
+- `python3 scripts/mutter.py validate-prd` — checks `.mutter/prd/PRD.md` (Overview/Goals/Problem/Users/Functional requirements); optional **`--prd`**
+- `python3 scripts/mutter.py prd-init` — scaffold **`PRD.md`** from template when missing (**`--force`** overwrites)
 
 - `python3 scripts/mutter.py status` — prints `state/current.json` and short previews of the resolved active task and plan when set.
 - **`python3 scripts/mutter.py tasks-status`** — Markdown table of **Steps** / **Acceptance** checklist progress for all tasks (or `--task <slug>` for one). Use with **`/mutter:status`**.

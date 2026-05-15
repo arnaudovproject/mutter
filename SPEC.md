@@ -33,14 +33,14 @@ Goal: enable AI to work on very large codebases with **high precision**, **low h
 | `.agents/plugins/marketplace.json` | **Codex** repo-scoped marketplace ([build plugins](https://developers.openai.com/codex/plugins/build)) — `mutter` → `./mutter-claude`. Codex also reads `.claude-plugin/marketplace.json` when present. |
 | `package.json` (repo root) | **OpenCode** git/npm plugin entry (`main` → `.opencode/plugins/mutter.js`); install with `mutter@git+https://github.com/arnaudovproject/mutter.git` per `.opencode/INSTALL.md`. |
 | `.opencode/plugins/mutter.js` | OpenCode plugin: registers `mutter-claude/skills` on `config.skills.paths` and injects bootstrap text from `mutter-claude/templates/CLAUDE.md`. |
-| `scripts/mutter.py` | **Workspace CLI** — validate tasks (`validate-task`, `validate-tasks`) and plans (`validate-plan`, `validate-plans`), `status`, `scan-state`, **`agent-cadence`** (skill vs CLI map), `check-skill-refs`, and `ci` (refs + tasks + plans + skill tree sync parity for Claude + Cursor). |
+| `scripts/mutter.py` | **Workspace CLI** — validate tasks (`validate-task`, `validate-tasks`) and plans (`validate-plan`, `validate-plans`), PRD (`prd-init`, `validate-prd`), `status`, `scan-state`, **`agent-cadence`** (skill vs CLI map), `check-skill-refs`, and `ci` (refs + tasks + plans + skill tree sync parity for Claude + Cursor). |
 | `mutter-claude/templates/scripts/mutter.py` | **Bootstrap copy** — same script; bootstrap installs it to `<repo>/scripts/mutter.py` when missing. |
 
 ## `.mutter/` directory map
 
 See `.mutter/core/project.md` for the canonical tree. Top-level dirs:
 
-`core/`, `context/`, `architecture/`, `roadmap/`, `tasks/{current,completed,blocked,planned}/`, `memory/` (includes **`memory/official-tech-docs-roadmap.md`**: curated official doc links — consult before web search), `scans/`, `workflows/`, `rules/`, `plans/`, `reviews/`, `diffs/`, `index/`, `cache/`, `logs/`, `metadata/`, `brainstore/`, `templates/`, `snapshots/`, `state/`.
+`core/`, `context/`, `architecture/`, `roadmap/`, `tasks/{current,completed,blocked,planned}/`, `memory/` (includes **`memory/official-tech-docs-roadmap.md`**: curated official doc links — consult before web search), `scans/`, `workflows/`, `rules/`, `plans/`, `reviews/`, `diffs/`, `index/`, `cache/`, `logs/`, `metadata/`, `brainstore/`, `prd/` (`PRD.md` workspace product spec), `templates/`, `snapshots/`, `state/`.
 
 ## Commands / skills (parity)
 
@@ -52,7 +52,7 @@ See `.mutter/core/project.md` for the canonical tree. Top-level dirs:
 
 **OpenCode:** skills directory registered by the root `package.json` plugin; use OpenCode’s **skill** tool to list/load by name. See [OpenCode plugins](https://opencode.ai/docs/plugins/) and `.opencode/INSTALL.md`.
 
-Core set: `bootstrap`, `help`, `scan`, `brainstore`, `task`, `plan`, `workers`, `safe-edit`, `review-diff`, plus navigation: `roadmap`, `architecture`, `context`, `memory`, `workflow`, `snapshot`, `review`, `explain`, `analyze`, `risks`, `dependencies`, `tests`, `affected`.
+Core set: `bootstrap`, `help`, `scan`, `brainstore`, `prd`, `task`, `plan`, `workers`, `safe-edit`, `review-diff`, plus navigation: `roadmap`, `architecture`, `context`, `memory`, `workflow`, `snapshot`, `review`, `explain`, `analyze`, `risks`, `dependencies`, `tests`, `affected`.
 
 ## Critical rules
 

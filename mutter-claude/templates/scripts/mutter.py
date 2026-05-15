@@ -33,6 +33,8 @@ Usage (from repository root that contains `.mutter/`):
   python3 scripts/mutter.py sync-task-progress
   python3 scripts/mutter.py bootstrap-sync
   python3 scripts/mutter.py agent-cadence [--out .mutter/context/agent-cadence.md]
+  python3 scripts/mutter.py prd-init [--force]
+  python3 scripts/mutter.py validate-prd [--prd .mutter/prd/PRD.md]
 """
 from __future__ import annotations
 
@@ -223,6 +225,80 @@ def section_definition_of_done(sections: dict[str, str]) -> str | None:
         if nl.startswith("definition ") and "done" in nl:
             return body
     return None
+
+
+def prd_find_section_body(
+    sections: dict[str, str],
+    *,
+    keywords: list[str],
+    exclude_name_substrings: list[str] | None = None,
+) -> tuple[str | None, str | None]:
+    """First ## section whose heading matches any keyword (substring), excluding bad heading fragments."""
+    bad = [x.lower() for x in (exclude_name_substrings or [])]
+    for name, body in sections.items():
+        nl = name.lower()
+        if any(b in nl for b in bad):
+            continue
+        if any(k.lower() in nl for k in keywords):
+            return name, body
+    return None, None
+
+
+def validate_prd_file(prd_path: Path, repo_root: Path, report: Report) -> None:
+    """Structure check for `.mutter/prd/PRD.md` (agent-facing product specification)."""
+    try:
+        rel = str(prd_path.relative_to(repo_root))
+    except ValueError:
+        rel = str(prd_path)
+    if not prd_path.is_file():
+        report.add(rel, "error", "PRD file does not exist — run `python3 scripts/mutter.py prd-init`")
+        return
+    text = prd_path.read_text(encoding="utf-8")
+    if not text.strip():
+        report.add(rel, "error", "PRD file is empty")
+        return
+    head = text.splitlines()[:1]
+    if not head or not head[0].startswith("# "):
+        report.add(rel, "warn", "PRD should start with '# <Product name>' title line")
+
+    sections = parse_sections(text)
+    if len(sections) < 3:
+        report.add(rel, "warn", "PRD has very few ## sections — compare with `.mutter/templates/PRD.md`")
+
+    _ov_title, ov_body = prd_find_section_body(
+        sections,
+        keywords=["overview", "product overview"],
+    )
+    if not ov_body or len(ov_body.strip()) < 20:
+        report.add(rel, "error", "missing or thin ## Overview (heading should mention Overview)")
+
+    _g_title, g_body = prd_find_section_body(
+        sections,
+        keywords=["goal", "objective"],
+        exclude_name_substrings=["non-goal", "non goals", "non-goals"],
+    )
+    if not g_body or len(g_body.strip()) < 15:
+        report.add(rel, "error", "missing or thin ## Goals / Objectives (avoid using only 'Non-goals' for this)")
+
+    _p_title, p_body = prd_find_section_body(sections, keywords=["problem", "pain"])
+    if not p_body or len(p_body.strip()) < 15:
+        report.add(rel, "error", "missing or thin ## Problem statement (heading should mention Problem or Pain)")
+
+    _u_title, u_body = prd_find_section_body(sections, keywords=["user", "audience", "persona"])
+    if not u_body or len(u_body.strip()) < 15:
+        report.add(rel, "error", "missing or thin ## Users section (heading should mention Users, Audience, or Personas)")
+
+    _func_title, func_body = prd_find_section_body(
+        sections,
+        keywords=["functional"],
+        exclude_name_substrings=["non-functional", "non functional"],
+    )
+    if not func_body or len(func_body.strip()) < 20:
+        report.add(rel, "warn", "## Functional requirements missing or very short — agents need concrete behaviors")
+
+    _scope_title, scope_body = prd_find_section_body(sections, keywords=["scope"])
+    if scope_body and len(scope_body.strip()) < 15:
+        report.add(rel, "warn", "## Scope looks very thin — clarify in/out explicitly")
 
 
 def validate_plan_file(plan_path: Path, repo_root: Path, report: Report) -> None:
@@ -463,6 +539,64 @@ def resolve_plan_arg(repo_root: Path, plan_arg: str | None) -> Path | None:
         return None
     s = str(ap).strip().lstrip("./")
     return resolve_plan_arg(repo_root, s)
+
+
+def resolve_prd_path(repo_root: Path, prd_arg: str | None) -> Path:
+    """Default `.mutter/prd/PRD.md`; optional `--prd` repo-relative / `.mutter/…` / absolute."""
+    if not prd_arg:
+        return (repo_root / ".mutter" / "prd" / "PRD.md").resolve()
+    raw_s = prd_arg.strip()
+    raw = Path(raw_s)
+    if raw.is_absolute():
+        return raw.resolve()
+    candidates = [
+        repo_root / raw_s,
+        repo_root / ".mutter" / raw_s,
+        repo_root / ".mutter" / "prd" / raw_s,
+        repo_root / ".mutter" / "prd" / raw.name,
+    ]
+    for c in candidates:
+        if c.is_file():
+            return c.resolve()
+    return (repo_root / raw_s).resolve()
+
+
+def _prd_template_body(repo_root: Path) -> str:
+    tpl = repo_root / ".mutter" / "templates" / "PRD.md"
+    if tpl.is_file():
+        return tpl.read_text(encoding="utf-8")
+    plugin_tpl = repo_root / "mutter-claude" / "templates" / "dot-mutter" / "templates" / "PRD.md"
+    if plugin_tpl.is_file():
+        return plugin_tpl.read_text(encoding="utf-8")
+    return (
+        "# Product: <name>\n\n## Overview\n\n_(fill)_\n\n## Goals\n\n- …\n\n"
+        "## Problem statement\n\n_(fill)_\n\n## Users and personas\n\n_(fill)_\n\n"
+        "## Scope\n\n### In scope\n\n- …\n\n### Out of scope / non-goals\n\n- …\n\n"
+        "## Functional requirements\n\n- …\n"
+    )
+
+
+def cmd_prd_init(args: argparse.Namespace, repo_root: Path) -> int:
+    prd_dir = repo_root / ".mutter" / "prd"
+    prd_dir.mkdir(parents=True, exist_ok=True)
+    dest = prd_dir / "PRD.md"
+    if dest.is_file() and not args.force:
+        print(
+            f"OK — PRD already exists at {dest.relative_to(repo_root)} (use --force to overwrite from template)",
+            flush=True,
+        )
+        return 0
+    dest.write_text(_prd_template_body(repo_root), encoding="utf-8")
+    print(f"Wrote {dest.relative_to(repo_root)}", flush=True)
+    return 0
+
+
+def cmd_validate_prd(args: argparse.Namespace, repo_root: Path) -> int:
+    report = Report()
+    pp = resolve_prd_path(repo_root, args.prd)
+    validate_prd_file(pp, repo_root, report)
+    report.print()
+    return report.exit_code(args.warnings_as_errors)
 
 
 def resolve_task_arg(repo_root: Path, task_arg: str | None) -> Path | None:
@@ -706,6 +840,7 @@ def _bootstrap_sync_rel_allowed(rel_posix: str) -> bool:
             "snapshots/README.md",
             "cache/README.md",
             "logs/README.md",
+            "prd/README.md",
         }
     )
     if rel_posix in stub_paths:
@@ -1444,6 +1579,12 @@ def cmd_context_pack(args: argparse.Namespace, repo_root: Path) -> int:
         lines.append("_(none resolved)_")
         lines.append("")
 
+    prd_default = repo_root / ".mutter" / "prd" / "PRD.md"
+    if prd_default.is_file():
+        lines.append(f"## PRD (`{prd_default.relative_to(repo_root)}`)")
+        lines.append("\n".join(prd_default.read_text(encoding="utf-8").splitlines()[:100]))
+        lines.append("")
+
     changed = load_scan_changed(repo_root)
     if not changed and git_is_repo(repo_root):
         changed = git_changed_paths(repo_root, staged=False)[:500]
@@ -1811,6 +1952,7 @@ All `python3 scripts/mutter.py …` lines assume the **repository root** (the di
 
 | When | Skill | Notes |
 |------|-------|-------|
+| Product requirements spec for agents (“what / why”) | `/mutter:prd` | Canonical path **`.mutter/prd/PRD.md`** — create/update with **`python3 scripts/mutter.py prd-init`** (once), validate with **`validate-prd`**; revise when roadmap/architecture changes scope |
 | Raw notes, research, spikes | `/mutter:brainstore` | Keeps chat short; intel lives under `.mutter/brainstore/` |
 | Boundaries, ADRs, system shape | `/mutter:architecture` | After ADR edits: `python3 scripts/mutter.py validate-adr` |
 | Themes / milestones / debt | `/mutter:roadmap` | Empty args: align roadmap with architecture; **`/mutter:task create`** with no title pulls from roadmap; with a title, still cross-link plans + roadmap when no path given |
@@ -2152,6 +2294,23 @@ def main() -> int:
         help="Write cadence to this path (repo-relative or absolute) instead of stdout.",
     )
     p_ac.set_defaults(func=cmd_agent_cadence)
+
+    p_prd_i = sub.add_parser(
+        "prd-init",
+        help="Create `.mutter/prd/PRD.md` from `.mutter/templates/PRD.md` when missing (or --force).",
+    )
+    p_prd_i.add_argument("--force", action="store_true", help="Overwrite existing PRD.md")
+    p_prd_i.set_defaults(func=cmd_prd_init)
+
+    p_prd_v = sub.add_parser("validate-prd", help="Validate PRD markdown structure (agent-facing product spec).")
+    p_prd_v.add_argument(
+        "--prd",
+        type=str,
+        default=None,
+        help="PRD path (default: .mutter/prd/PRD.md)",
+    )
+    p_prd_v.add_argument("--warnings-as-errors", action="store_true")
+    p_prd_v.set_defaults(func=cmd_validate_prd)
 
     args = ap.parse_args()
     start = args.root if args.root else Path.cwd()

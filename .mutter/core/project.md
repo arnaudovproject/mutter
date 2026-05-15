@@ -28,7 +28,8 @@ This directory (`.mutter/`) is the **persistent structured memory** for AI-assis
 | `state/` | `current.json` — active task/plan/workflow + `execution_progress` (from `sync-task-progress`) |
 | `context/` | Small curated context bundles (not whole-repo dumps) |
 | `rules/` | Project-specific mutter rules shards |
-| `templates/` | Local templates for tasks/plans |
+| `prd/` | Workspace Product Requirements Document — **`PRD.md`** (`prd-init`, `validate-prd`, **`/mutter:prd`**) |
+| `templates/` | Local templates for tasks, PRD scaffold, plans |
 
 ## Principles
 

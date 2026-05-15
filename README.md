@@ -29,9 +29,9 @@ Use the **marketplace** flow only — do **not** symlink into `~/.claude/plugins
 
 | Area | Description |
 |------|-------------|
-| **Project memory** | `.mutter/` holds architecture, tasks, plans, indexes, logs, rules — without monolithic chat dumps. |
+| **Project memory** | `.mutter/` holds architecture, tasks, plans, optional **PRD** (`.mutter/prd/PRD.md`), indexes, logs, rules — without monolithic chat dumps. |
 | **Navigation** | Index shards and explicit paths first; never load the whole repo into context. |
-| **Orchestration** | Scanning, `task`, `plan`, `agent-cadence` (CLI map), `workers`, `safe-edit`, `review-diff`. |
+| **Orchestration** | Scanning, `task`, `plan`, `prd`, `agent-cadence` (CLI map), `workers`, `safe-edit`, `review-diff`. |
 | **Discipline** | Tiny entry files (`CLAUDE.md`, Cursor rules); depth lives under `.mutter/`. |
 | **Tooling** | Optional workspace CLI: `scripts/mutter.py` for validation, preflight, context packs, CI helpers. |
 
@@ -111,6 +111,7 @@ Restart OpenCode. More: [`.opencode/INSTALL.md`](.opencode/INSTALL.md) · [OpenC
 1. **`/mutter:bootstrap`** — `.mutter/`, entry files, `scripts/mutter.py` if missing
 2. **`/mutter:scan`** — `metadata/scan-state.json` + `index/` shards
 3. Optional: **`python3 scripts/mutter.py agent-cadence --out .mutter/context/agent-cadence.md`** — when to run which skill vs CLI
+4. Optional (product / application repos): **`python3 scripts/mutter.py prd-init`**, then **`python3 scripts/mutter.py validate-prd`** — canonical **`.mutter/prd/PRD.md`** (see **§2** below)
 
 ### 1 — New session (resume cheaply)
 
@@ -120,18 +121,20 @@ Restart OpenCode. More: [`.opencode/INSTALL.md`](.opencode/INSTALL.md) · [OpenC
 
 ### 2 — Direction (before locking scope)
 
+- **`/mutter:prd`** — workspace **Product Requirements Document** at **`.mutter/prd/PRD.md`** (product “what / why” for agents). First time: **`python3 scripts/mutter.py prd-init`**; after edits: **`python3 scripts/mutter.py validate-prd`**. Distinct from repo-root **`SPEC.md`** when your repo is **Mutter itself** — **`SPEC.md`** describes the framework; **`PRD.md`** describes *your* product in a consumer workspace.
 - **`/mutter:brainstore`** — notes / spikes → `.mutter/brainstore/`
 - **`/mutter:architecture`** — boundaries, APIs, ADRs; after ADR edits → **`python3 scripts/mutter.py validate-adr`**
 - **`/mutter:roadmap`** — themes, milestones, debt. With **empty** args: align roadmap with architecture, then **`/mutter:task create`** (no title) can spawn tasks from open roadmap items
 
-### 3 — Roadmap vs plan
+### 3 — PRD vs roadmap vs plan
 
+- **PRD** (optional but recommended for app/product work) = stable **product intent**: goals, users, problems, functional scope — **`.mutter/prd/PRD.md`**. **`context-pack`** includes a PRD excerpt when that file exists.
 - **Roadmap** = *what* over time (outcomes, milestones).
 - **Plan** = *how* for **one** scoped change → **`/mutter:plan`**, then **`python3 scripts/mutter.py validate-plan`**. Optional: **`python3 scripts/mutter.py risk-check --from-git`**.
 
 ### 4 — Tasks (execute / continue)
 
-1. **`/mutter:task create "…"`** — one **Steps** checkbox ≈ one agent turn (one **Read:** list, one outcome); **`split`** if a step needs “the whole repo”. If no explicit task file, follow the **task** skill: check **`.mutter/plans/`**, **`.mutter/roadmap/`**, **`.mutter/state/current.json`**
+1. **`/mutter:task create "…"`** — one **Steps** checkbox ≈ one agent turn (one **Read:** list, one outcome); **`split`** if a step needs “the whole repo”. Prefer **reuse** of existing modules/helpers (see **task** skill and **`TASK.md`** template). If no explicit task file, follow the **task** skill: check **`.mutter/plans/`**, **`.mutter/roadmap/`**, optionally **`.mutter/prd/PRD.md`**, **`.mutter/state/current.json`**
 2. Set **`active_task`** in **`.mutter/state/current.json`** when executing (per **task** skill)
 3. Per step: **`/mutter:safe-edit`** (or same discipline) → tick **one** step → append **`.mutter/logs/tasks.log`** → **`python3 scripts/mutter.py sync-task-progress`** → **`/mutter:status`** or **`python3 scripts/mutter.py tasks-status --task <slug>`**
 4. Before “done”: **`python3 scripts/mutter.py validate-task`**
@@ -177,6 +180,7 @@ Claude: **`/mutter:<name>`** · Cursor: same names + palette · Codex: plugin UI
 | **safe-edit** | Any edit | Explain → minimal diff → narrow verify; long output → **`.mutter/logs/`**. |
 | **review-diff** | Pre-merge | Quality, security, tests; severity tags → **`.mutter/reviews/`**. |
 | **brainstore** | Ideas / intel | **`.mutter/brainstore/`** — use early to keep chat small. |
+| **prd** | Product spec for agents | **`.mutter/prd/PRD.md`** — **`prd-init`**, **`validate-prd`**; revise when roadmap/architecture changes product scope. |
 | **roadmap** | Direction over time | **`.mutter/roadmap/`**; empty args → align with **architecture** before new tasks. |
 | **architecture** | Boundaries / ADRs | Design truth; **`validate-adr`** when ADRs change. |
 | **workers** | Epics / parallelism | Queue + briefs + file caps; after **split** if still too wide. |
@@ -205,10 +209,11 @@ Markdown-backed commands (**`mutter-<skill>`**). Common governance / validation:
 | **mutter-preflight** | State, dirty git, diff size, etc. |
 | **mutter-status** | Checklist table (`tasks-status`). |
 | **mutter-context-pack** | Session Markdown bundle. |
+| **mutter-prd** | PRD workflow (`prd` skill); pairs with **`prd-init`** / **`validate-prd`**. |
 | **mutter-validate** | Task / plan validation via workspace CLI. |
 | **mutter-governance** | ADRs, boundaries, quality gates. |
 
-Other `*.md` files mirror skills (scan, plan, task, …).
+Other `*.md` files mirror skills (scan, plan, task, prd, …).
 
 ---
 
@@ -223,13 +228,15 @@ Resolves repo root by walking up for **`.mutter/`**, or pass **`--root`**. In co
 | `agent-cadence` | Start / onboarding | Phases → skills → CLI; `--out .mutter/context/agent-cadence.md` |
 | `status` | Each new session | `.mutter/state/current.json` + active task/plan snippets |
 | `preflight` | Before large / risky work | State, optional active task, dirty git, diff size |
-| `context-pack` | Cold start / handoff | Markdown pack; `--out` |
+| `context-pack` | Cold start / handoff | Markdown pack (task, plan, **PRD excerpt** if present); `--out` |
 | `tasks-status` | After task steps | Table; `--task` for one file |
 | `sync-task-progress` | After checkbox ticks | `execution_progress` in `.mutter/state/current.json` |
 | `validate-task` | Before task “done” | One task (default: active) |
 | `validate-tasks` | CI / release | Tasks in selected buckets |
 | `validate-plan` | After a plan | One file under `.mutter/plans/` |
 | `validate-plans` | CI | All plans |
+| `prd-init` | First PRD | Create `.mutter/prd/PRD.md` from template (`--force` overwrites) |
+| `validate-prd` | After PRD edits | Structure check (default: `.mutter/prd/PRD.md`; `--prd` path) |
 | `suggest-tests` | Before PR | Commands from `.mutter/testing/commands.json` |
 | `pr-template` | Open PR | Body from task/plan + git + suggested tests |
 | `scan-state` | After scan | `changed_files` from `metadata/scan-state.json` |
@@ -258,7 +265,7 @@ python3 scripts/mutter.py --help
 
 ## `.mutter/` layout
 
-Canonical map: [`.mutter/core/project.md`](.mutter/core/project.md) — `index/`, `architecture/`, `tasks/`, `plans/`, `state/`, `workflows/`, `memory/`, `logs/`, `brainstore/`, etc. **Incremental shards**, not one giant file.
+Canonical map: [`.mutter/core/project.md`](.mutter/core/project.md) — `index/`, `architecture/`, `tasks/`, `plans/`, **`prd/`**, `state/`, `workflows/`, `memory/`, `logs/`, `brainstore/`, etc. **Incremental shards**, not one giant file.
 
 ---
 
