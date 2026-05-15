@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/logo.png" alt="Mutter" width="200" />
+</p>
+
 # Mutter
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
